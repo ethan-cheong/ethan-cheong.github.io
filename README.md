@@ -1,4 +1,3 @@
 # ethan-cheong.github.io
-personal website
 
-Made with jekyll
+Made with jekyll, work in progress
