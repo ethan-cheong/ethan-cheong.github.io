@@ -7,3 +7,4 @@ To do:
 2. Add in sidebar for posts with projects tag that links to each header
 3. Website structure: Change home page!
 4. Projects page: make gui similar to Rcharlie's that shows project preview 
+5. Michaelmas blog post, courses
