@@ -106,7 +106,7 @@ write_csv(song.tibble, "./datasets/songs_unlabelled.csv", col_names = TRUE)
 {% endraw %}
 {% endhighlight %}
 ### Lyric Scraping ###
-Next, I had to get lyrics for each song that I'd scraped. I ran into problems with the `geniusr` library, so I decided to use the `lyricsgenius` library from python for this next step.
+Next, I had to get lyrics for each song that I'd scraped. I ran into problems with the `geniusr` package, so I decided to use the `lyricsgenius` package from python for this next step.
 {% highlight python %}
 {% raw %}
 import lyricsgenius
@@ -293,10 +293,10 @@ song.data.explore %>%
 
 We see that October has the most number of top 100 hits - however, this doesn't necessarily mean October is the best month to release songs! It's also possible that prolific artists like to release their albums in October.
 
-Next, I decided to perform visualizations with the words themselves. Using the `tidytext` library, we can convert the dataset to a 'tidy' format - that is, with each individual word occupying a row.
+Next, I decided to perform visualizations with the words themselves. Using the `tidytext` package, we can convert the dataset to a 'tidy' format - that is, with each individual word occupying a row.
 {% highlight R %}
 {% raw %}
-library(tidytext)  # library to convert words to 'tidy' format
+library(tidytext)  # package to convert words to 'tidy' format
 library(lexicon)   # lexicons used for filtering words
 
 song.data.tidy <- song.data.explore %>%
@@ -367,7 +367,7 @@ word.density %>%
 
 ![graph4](/assets/lovesongs/graph4.png)
 
-Using these two visualizations, we can solve the first problem by coming up with a list of stop words - words that we should subsequently filter from our dataset before feeding them into models.
+Using these two visualizations, we can solve the first problem by coming up with a list of stop words - words that we should subsequently filter from our dataset before using it to train our models. This will help reduce the dimensionality of our transformed dataset and subsequently the cost of training each model.
 {% highlight R %}
 {% raw %}
 stop.words <- c(
@@ -420,26 +420,96 @@ word.density.2 %>%
 
 ![graph5](/assets/lovesongs/graph5.png)
 
+We can now see clear differences between the two song types! Even just considering the words with the highest average density in each category, love songs seem to use more first and second person pronouns ("us", "our"), whilst non-love songs contain a mix of first, second and third person pronouns ("he", "us", "her", "his"), with third person pronouns dominating.
+
+We also see the phrase "love" turn up with higher relative density in love songs, which is to be expected. Words in our top 45 list that are unique to love songs include "heart", "would" (perhaps the singer is making promises?) and "fall", whilst those unique to other songs seem to be mostly swear words. Of course, the presence of these words alone isn't enough to determine whether a song is a love song, which is where the next few steps come in.
+## Feature Engineering ##
+Our data currently has a long string of lyrics for each song, and we have to convert it to a form that we can feed into our algorithms. Here, we explore several more traditional methods for coming up with these features, namely TF-IDF and n-grams, as well as more cutting-edge methods such as Doc2Vec. In a future post, we'll look at models that use Convoluted Neural Networks like BERT.
+### TF-IDF ###
+Our goal is to generate a matrix where each row represents a song and each column represents a possible word in the song. We say _possible_ word because we need some measure of whether a song does not contain a word, in which case the entry for that word column will be 0. The number of rows should then be equal to the total number of words, without repeats, of every single song we have in our dataset - we call this huge list of words our **corpus**.
+
+Now that we have our **document-term matrix** (or song-word matrix in this case), assuming a song contains a word, what should we put in that entry? We could simply put a 1 to indicate the song has the word, but as we've stated earlier, the presence of a word isn't enough to determine whether a song is a love song - we should have some measure for the _significance_ for the word in the context of that song.
+
+Term Frequency - Inverse Document Frequency (TF-IDF) gives us a measure of this significance by taking how often a word appears and dividing it by the number of songs the word appears in. The intuition is that a term that appears many times in one document but few times in other documents will have a high significance to that specific song.
+
+First of all, let's make sure our dataset contains only words in our lexicons.
 {% highlight R %}
 {% raw %}
-
+# Function to remove words that aren't in the lexicons from lyrics
+FilterLexicon <- function(string) {
+  string.list <- str_split(string, boundary("word"))
+  for (i in seq_along(string.list)){
+    string.list[[i]] <- if_else(string.list[[i]] %in% grady_augmented | string.list[[i]] %in% profanity_zac_anger, string.list[[i]], "")
+  }
+  return(str_c(unlist(string.list), collapse = " "))
+}
+# Apply to song.data.clean
+lyrics <- song.data.clean$lyrics
+song.data.clean.2 <- song.data.clean %>%
+  mutate(lyrics = map_chr(lyrics, FilterLexicon))
 {% endraw %}
 {% endhighlight %}
-
+Now, we can use the `tm` package to get our features.
 {% highlight R %}
 {% raw %}
+library(tm)
 
+# Create the corpus
+corpus <- VCorpus(VectorSource(song.data.clean.2$lyrics))
+# document-term matrix, applying TF-IDF, stemming, and using stop words defined earlier
+tfidf.dtm <- DocumentTermMatrix(corpus, control = list(weighting= weightTfIdf,
+                                                       stopwords = stop.words,
+                                                       removeNumbers = TRUE,
+                                                       removePunctuation = TRUE,
+                                                       stemming=TRUE))
+# Get a data.frame for modelling
+tfidf.df <- data.frame(as.matrix(tfidf.dtm),
+                       stringsAsFactors = FALSE)
+# Add labels
+tfidf.df$song.label <- song.data.clean.2$love.song
 {% endraw %}
 {% endhighlight %}
+Using `view(tfidf.df)`, we can see that we have a `data.frame` with 4453 documents and 12795 terms which looks something like this:
 
+![image2](/assets/lovesongs/image2.png)
+
+Notice how _sparse_ this dataframe is - many of the entries are 0, which correspond to songs that don't have the word encoded by that particular column.
+
+We can also get a similar dataframe `tf.idf` that uses term frequency instead of TF-IDF by setting the `weighting` parameter of `DocumentTermMatrix()` to `weightTf`.
+
+![image3](/assets/lovesongs/image3.png)
+
+Notice that the entries of this dataframe are integers, which indicate how many times a particular term appears in a song.
+### N-grams ###
+Some words take on a different meaning when they're paired together with other words - a simple example would be something like "lost" and "get lost", which have different connotations. Since combinations of words have the potential to carry meaning that might be lost when we split words up, we can instead split up our words into combinations of n different words - called an n-gram. We can then follow the same procedure as before, but instead of each term occupying a column we have an n-gram.
+
+We implement bigrams below:
 {% highlight R %}
 {% raw %}
+# Function to tokenize bigrams
+BigramTokenizer <- function(x){
+  unlist(lapply(ngrams(words(x), 2), paste, collapse = " "), use.names = FALSE)
+}
 
+# Make bigrams document term matrix
+bigrams.dtm <- DocumentTermMatrix(corpus, control = list(tokenize = BigramTokenizer))
 {% endraw %}
 {% endhighlight %}
-
+Inspecting `bigrams.dtm`, we find that we have 328316 unique bigrams! To reduce the dimensionality of our matrix so that our models can fit more easily, we can take out bigrams using `removeSparseTerms()`
 {% highlight R %}
 {% raw %}
-
+# Take out bigrams that are only present in 1% of the songs.
+bigrams.dtm <- removeSparseTerms(bigrams.dtm, 0.99)
 {% endraw %}
 {% endhighlight %}
+Now, we have 2808 unique bigrams, which is much better.
+{% highlight R %}
+{% raw %}
+# Get df
+bigrams.df <- data.frame(as.matrix(bigrams.dtm),
+                         stringsAsFactors = FALSE)
+# Add labels
+bigrams.df$song.label <- song.data.clean$love.song
+{% endraw %}
+{% endhighlight %}
+### Doc2Vec ###
