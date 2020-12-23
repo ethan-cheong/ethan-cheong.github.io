@@ -181,8 +181,6 @@ Now that I had my labelled dataset, I had to clean it - especially the lyrical d
 {% raw %}
 library(tidyverse)
 library(lubridate)
-library(tidytext)
-library(lexicon)
 
 song.data <- read_csv("./datasets/songs_lyrics_labelled.csv",
                       col_names = c(
@@ -243,7 +241,7 @@ song.data.clean <- song.data.clean %>%
            str_replace_all("([a-zA-Z])\\1\\1",""))
 {% endraw %}
 {% endhighlight %}
-Finally, I converted chart.dates to lubridate date formats for easier visualizations later, and wrote the dataset to a csv to use in subsequent scripts.
+Finally, I converted chart.dates to `lubridate` date formats for easier visualizations later, and wrote the dataset to a csv to use in subsequent scripts.
 {% highlight R %}
 {% raw %}
 song.data.clean <- song.data.clean %>%
@@ -254,6 +252,191 @@ write_csv(song.data.clean, "datasets/song_data_clean.csv", col_names = TRUE)
 {% endraw %}
 {% endhighlight %}
 ### Exploratory Data Analysis ###
+At this stage, I tried coming up with questions to get a better understanding of the dataset. Firstly, what proportion of songs that chart each year are love songs?
+{% highlight R %}
+{% raw %}
+install.packages("RColorBrewer")
+
+song.data.explore %>%
+  count(year = year(chart.date), love.song) %>%
+  mutate(love.song = if_else(love.song==0, "No", "Yes")) %>%
+  ggplot(aes(year, n)) +
+  geom_bar(stat = "identity", position = "fill", aes(fill = love.song)) +
+  labs(x = "Year", y = "Proportion", fill = "Love Song", title = "Yearly proportion of top-100 songs by song category") +
+  scale_x_continuous(breaks = c(2010:2020)) +
+  scale_fill_brewer(palette = "PuRd") +
+  theme_dark()
+{% endraw %}
+{% endhighlight %}
+
+![graph1](/assets/lovesongs/graph1.png)
+
+We see a slight decrease in proportion of love songs over time - although it's difficult to see if it's a significant trend.
+
+Next, what months are best to release songs - that is, what month were top 100 songs most likely to be released in?
+{% highlight R %}
+{% raw %}
+song.data.explore %>%
+  filter(release.date >= date("01-01-2010")) %>%
+  count(month = factor(month(release.date))) %>%
+  ggplot(aes(month, n, fill=month)) +
+  geom_bar(stat = "identity") +
+  scale_x_discrete("Month", labels = month(c(1:12), label = TRUE)) +
+  labs(y = "Count", title = "Number of top 100 hits per month across 10 years") +
+  scale_fill_brewer(palette = "Set3") +
+  theme_dark() +
+  theme(legend.position = "none")
+{% endraw %}
+{% endhighlight %}
+
+![graph2](/assets/lovesongs/graph2.png)
+
+We see that October has the most number of top 100 hits - however, it's unlikely that this means October is the best months to release songs! It's possible that prolific artists like to release their albums in October.
+
+Next, I decided to perform visualizations with the words themselves. Using the `tidytext` library, we can convert the dataset to a 'tidy' format - that is, with each individual word occupying a row.
+{% highlight R %}
+{% raw %}
+library(tidytext)  # library to convert words to 'tidy' format
+library(lexicon)   # lexicons used for filtering words
+
+song.data.tidy <- song.data.explore %>%
+  unnest_tokens(word, lyrics) %>%
+  filter(word %in% grady_augmented | word %in% profanity_zac_anger) %>% # Keep only words in the lexicons
+  distinct()
+{% endraw %}
+{% endhighlight %}
+First, I found the most popular words in each class of song.
+{% highlight R %}
+{% raw %}
+popular.words <- song.data.tidy %>%
+  group_by(love.song) %>%
+  count(word, love.song, sort=TRUE) %>%
+  mutate(word = reorder_within(word, n, love.song)) %>%
+  filter(rank(desc(n)) <= 45) %>%  # We only take the top 45 words here
+  mutate(love.song = if_else(love.song == 0, "Other Songs", "Love Songs"))
+
+popular.words %>%
+  ggplot(aes(word, n, fill = love.song)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~love.song, scales = "free") +
+  coord_flip() +
+  scale_x_reordered() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(y = "Count",
+       title = "What were the most popular words in love songs and other songs?") +
+  scale_fill_brewer(palette = "PuRd") +
+  theme_dark()
+{% endraw %}
+{% endhighlight %}
+
+![graph3](/assets/lovesongs/graph3.png)
+
+There are two main problems with this - firstly, the presence of filler words such as "I", "the", "to", and "and", which are present across both classes of song and won't help us much with classification. Secondly, songs of particular genres (rap in particular) tend to contain many more words than others, resulting in them being overrepresented if we use a measure like the frequency of a word. To solve the second problem, we can instead take the density of a word - that is, the frequency of a word in a song divided by the total number of lyrics in that song - and average that across all songs.
+{% highlight R %}
+{% raw %}
+word.density <- song.data.tidy %>%
+  count(word, love.song) %>%
+  group_by(love.song) %>%
+  filter(rank(desc(n)) <= 100) %>%  # take the 100 most frequent words
+  left_join(song.data.clean) %>%
+  mutate(total.words = str_count(lyrics, boundary("word"))) %>%
+  mutate(density = str_count(lyrics, word)/total.words) %>%
+  select(love.song, word, density) %>%
+  group_by(word, love.song) %>%
+  filter(n()>2) %>%
+  summarise(mean.density = mean(density))
+
+word.density %>%
+  arrange(desc(mean.density)) %>%
+  group_by(love.song) %>%
+  filter(rank(desc(mean.density)) <= 45) %>%
+  mutate(word = reorder_within(word, mean.density, love.song)) %>%
+  mutate(love.song = if_else(love.song == 0, "Other Songs", "Love Songs")) %>%
+  ggplot(aes(word, mean.density, fill = love.song)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~love.song, scales = "free") +
+  coord_flip() +
+  scale_x_reordered() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(y = "Average density of each word across songs",
+       title = "Which words had the highest average density in songs across song types?") +
+  scale_fill_brewer(palette = "PuBu") +
+  theme_dark()
+{% endraw %}
+{% endhighlight %}
+
+![graph4](/assets/lovesongs/graph4.png)
+
+Using these two visualizations, we can solve the first problem by coming up with a list of stop words - words that we should subsequently filter from our dataset before feeding them into models.
+{% highlight R %}
+{% raw %}
+stop.words <- c(
+  'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s',
+  't','u','v','w','x','y','z','in','the','it','you','on','no','me','at','to','is',
+  'am','and','go','or','do','be','not','my','as','we','all','so','ai','that',
+  'up','oh','now','like','your','one','of','out','yeah','for','got','can','if',
+  'get','are','em','but','know','here','will','every','ever','always',
+  'same','done','with','just','have','this','when','because'
+)
+{% endraw %}
+{% endhighlight %}
+After removing these stop words, I plotted average density across songs for each word one more time:
+
+{% highlight R %}
+{% raw %}
+song.data.tidy.2 <- song.data.tidy %>%
+	filter(!word %in% stop.words)
+
+word.density.2 <- song.data.tidy.2 %>%
+	count(word, love.song) %>%
+	group_by(love.song) %>%
+	filter(rank(desc(n)) <= 100) %>%
+	left_join(song.data.clean) %>%
+	mutate(total.words = str_count(lyrics, boundary("word"))) %>%
+	mutate(density = str_count(lyrics, word)/total.words) %>%
+	select(love.song, word, density) %>%
+	group_by(word, love.song) %>%
+	filter(n()>2) %>%
+	summarise(mean.density = mean(density))
+
+word.density.2 %>%
+	arrange(desc(mean.density)) %>%
+	group_by(love.song) %>%
+	filter(rank(desc(mean.density)) <= 45) %>%
+	mutate(word = reorder_within(word, mean.density, love.song)) %>%
+	mutate(love.song = if_else(love.song == 0, "Other Songs", "Love Songs")) %>%
+	ggplot(aes(word, mean.density, fill = love.song)) +
+	geom_col(show.legend = FALSE) +
+	facet_wrap(~love.song, scales = "free") +
+	coord_flip() +
+	scale_x_reordered() +
+	scale_y_continuous(expand = c(0,0)) +
+	labs(y = "Average density of each word across songs",
+	     title = "Which words had the highest average density in songs across song types?") +
+	scale_fill_brewer(palette = "RdPu") +
+	theme_dark()
+{% endraw %}
+{% endhighlight %}
+
+![graph5](/assets/lovesongs/graph5.png)
+
+{% highlight R %}
+{% raw %}
+
+{% endraw %}
+{% endhighlight %}
+
+{% highlight R %}
+{% raw %}
+
+{% endraw %}
+{% endhighlight %}
+
+{% highlight R %}
+{% raw %}
+
+{% endraw %}
+{% endhighlight %}
 
 {% highlight R %}
 {% raw %}
