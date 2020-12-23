@@ -291,7 +291,7 @@ song.data.explore %>%
 
 ![graph2](/assets/lovesongs/graph2.png)
 
-We see that October has the most number of top 100 hits - however, it's unlikely that this means October is the best months to release songs! It's possible that prolific artists like to release their albums in October.
+We see that October has the most number of top 100 hits - however, this doesn't necessarily mean October is the best month to release songs! It's also possible that prolific artists like to release their albums in October.
 
 Next, I decided to perform visualizations with the words themselves. Using the `tidytext` library, we can convert the dataset to a 'tidy' format - that is, with each individual word occupying a row.
 {% highlight R %}
