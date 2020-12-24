@@ -7,14 +7,13 @@ tag: Projects
 ---
 _You can find the datasets and code for this project here: [github.com/ethan-cheong/loveSongs](http://github.com/ethan-cheong/loveSongs)_
 
-_This is a work in progress!_
 ## Motivation ##
 
 Since finishing my project with the projects division, I've been looking into other applications of Natural Language Processing (NLP). Specifically, I've been exploring how NLP can be used to distinguish love songs from non-love songs, and have been trying to train a classifier that would be able to tell if a song is a love song from the lyrics.
 
 At first glance, this seemed like quite an easy problem - after all, there should be certain 'trigger' words that indicate if a song is a love song. Some obvious words that come to mind include "love", "tears" and "cry". The thing is, we can quite easily think of examples of non-love songs that contain these words - for example, Starships by Nicki Minaj, which contains the phrase "I love to dance". On the other hand, some love songs like Iris by the Goo Goo Dolls don't contain obvious phrases like these. Especially tricky to classify are songs where the entire song is a _metaphor_, and doesn't explicitly mention love or relationships at all.
 
-Clearly, the solution isn't as simple as just looking for trigger words - we'll try a few traditional classification algorithms as well as more cutting-edge NLP techniques. First of all, I came across the somewhat tricky problem of defining a love song - Wikipedia calls it "a song about romantic love, falling in love, heartbreak after a breakup, and the feelings that these experiences bring." Just to be clear, this means songs like Ed Sheeran's "Shape of You" are **not** love songs.
+Clearly, the solution isn't as simple as just looking for trigger words - we'll try a few classification algorithms. First of all, I came across the somewhat tricky problem of defining a love song - Wikipedia calls it "a song about romantic love, falling in love, heartbreak after a breakup, and the feelings that these experiences bring." Just to be clear, this means songs like Ed Sheeran's "Shape of You" are **not** love songs.
 
 This distinction that songs about sleeping with someone are not considered love songs make things slightly difficult for our classifier, and I set the somewhat arbitrary goal that the classifier should be able to label tricky examples like "Shape of You" correctly.
 
@@ -22,7 +21,7 @@ I then came up with a rough plan for the process:
 1. Collecting data
 2. Cleaning and Visualization
 3. Feature Engineering
-4. Modelling and Prediction
+4. Modelling
 
 ## Collecting Data ##
 To start with, I needed a substantial list of pop songs - and because love songs transcend genres, I couldn't use user-made playlists from spotify. (User-made "love" playlists would probably tend towards a particular genre anyway.)
@@ -424,7 +423,7 @@ We can now see clear differences between the two song types! Even just consideri
 
 We also see the phrase "love" turn up with higher relative density in love songs, which is to be expected. Words in our top 45 list that are unique to love songs include "heart", "would" (perhaps the singer is making promises?) and "fall", whilst those unique to other songs seem to be mostly swear words. Of course, the presence of these words alone isn't enough to determine whether a song is a love song, which is where the next few steps come in.
 ## Feature Engineering ##
-Our data currently has a long string of lyrics for each song, and we have to convert it to a form that we can feed into our algorithms. Here, we explore several more traditional methods for coming up with these features, namely TF-IDF and n-grams, as well as more cutting-edge methods such as Doc2Vec. In a future post, we'll look at models that use Convoluted Neural Networks like BERT.
+Our data currently has a long string of lyrics for each song, and we have to convert it to a form that we can feed into our algorithms. Here, we explore several more traditional methods for coming up with these features, namely TF-IDF and n-grams. In a future post, we'll look at models that use Convoluted Neural Networks like BERT.
 ### TF-IDF ###
 Our goal is to generate a matrix where each row represents a song and each column represents a possible word in the song. We say _possible_ word because we need some measure of whether a song does not contain a word, in which case the entry for that word column will be 0. The number of rows should then be equal to the total number of words, without repeats, of every single song we have in our dataset - we call this huge list of words our **corpus**.
 
@@ -512,4 +511,134 @@ bigrams.df <- data.frame(as.matrix(bigrams.dtm),
 bigrams.df$song.label <- song.data.clean$love.song
 {% endraw %}
 {% endhighlight %}
-### Doc2Vec ###
+In a future post, we'll try more modern methods of creating word embeddings using frameworks like ELMo - for now, let's try modelling using the feature sets we have now.
+
+## Modelling ##
+We'll use `mlr3` to implement our machine learning algorithms - this is the newest version of the `mlr` package, a very popular tool for running these algorithms in R. I particularly like how this package integrates the whole modelling process into a pipeline, letting you quickly try multiple algorithms at once.
+
+As an example, let's try implementing a random forest on our `tfidf.df`:
+{% highlight R %}
+{% raw %}
+#Prepare classification task
+tfidf.task <- TaskClassif$new(id = "tfidf",
+                              backend = tfidf.df,
+                              target = 'song.label')
+
+# set a random forest learner
+learner.rf <- lrn("classif.ranger")
+
+# train-test split of 80:20
+tfidf.train <- sample(tfidf.task$nrow, 0.8*tfidf.task$nrow)
+tfidf.test <- setdiff(seq_len(tfidf.task$nrow), tfidf.train)
+
+# train the model
+learner.rf$train(tfidf.task, row_ids = tfidf.train)
+prediction <- learner.rf$predict(tfidf.task, row_ids = tfidf.test)
+
+# Get test accuracy
+measure = msr("classif.acc")
+prediction$score(measure)
+{% endraw %}
+{% endhighlight %}
+Running this block of code once gave me a test accuracy of 78.5%.
+
+We can also use `benchmark()` to compare multiple algorithms at the same time. We'll try k-nearest neighbours, a naive bayes classifier, random forests, support vector machines and XGBoost.
+{% highlight R %}
+{% raw %}
+# vector of algorithms to try -
+learners <- c("classif.kknn", "classif.naive_bayes", "classif.ranger", "classif.svm", "classif.xgboost")
+learners <- lapply(learners, lrn, predict_sets=c("train", "test"))
+
+#use 3-fold cross validation for resampling
+resamplings <- rsmp("cv", folds=3)
+design <- benchmark_grid(tfidf.task, learners, resamplings)
+
+# Evaluate benchmark
+bmr <- benchmark(design)
+
+# Choose performance measure
+measures <- list(
+  msr("classif.ce", id = "ce_train", predict_sets = "train"),
+  msr("classif.ce", id = "ce_test")
+)
+
+bmr$aggregate(measures)
+{% endraw %}
+{% endhighlight %}
+
+![image4](/assets/lovesongs/image4.png)
+
+We can see that Random Forests give us the lowest test error, followed by XGboost - it's worth looking deeper into these algorithms to understand what they're doing. (This will help us with parameter tuning - also, it's always nice to know more things!)
+### XGBoost ###
+XGBoost is a form of _gradient boosting_, which works by combining the outputs of many "weak" classifiers to produce a powerful "committee".
+
+### Random Forests ###
+Random forests involve multiple random decision trees, with each tree being grown on a random sample of the original data, and with a random subset of features being selected at each node to generate the best split.
+
+Although parameter tuning doesn't play as big a role in training a Random Forest, we can still do some tuning below:
+{% highlight R %}
+{% raw %}
+library(mlr3tuning)
+library(paradox)
+
+# Set parameters to tune
+tune_ps <- ParamSet$new(list(
+  ParamInt$new("max.depth", lower=1, upper = 32),
+  ParamInt$new("min.node.size", lower=1, upper=1000)
+))
+
+learner.rf <- lrn("classif.rpart")
+
+# Select a performance measure and a resampling strategy
+measure <- msr("classif.ce")
+resamplings <- rsmp("cv", folds=3)
+
+# Select a budget - We will terminate when tuning does not improve
+evals <- trm("stagnation")
+
+# Select a tuner
+tuner <- tnr("grid_search")
+
+rf.tuned.model <- AutoTuner$new(
+  learner = learner.rf,
+  resampling = resamplings,
+  measure = measure,
+  search_space = tune_ps,
+  terminator = evals,
+  tuner = tuner
+)
+
+# Compare tuned learner against default value learner
+grid <-  benchmark_grid(
+  task = tfidf.task,
+  learner = list(rf.tuned.model, lrn("classif.rpart")),
+  resampling = rsmp("cv", folds = 3)
+)
+
+bmr <- benchmark(grid)
+bmr$aggregate(msrs(c("classif.ce", "time_train")))
+{% endraw %}
+{% endhighlight %}
+
+![image5](/assets/lovesongs/image5.png)
+
+However, we see only marginally better performance from the untuned model (which had classification error of 0.22665).
+
+In addition to the tf-idf feature set, we can also look at how well the untuned algorithms perform on our tf and bigrams feature sets:
+
+![image6](/assets/lovesongs/image6.png)
+
+![image7](/assets/lovesongs/image7.png)
+
+**Test Error by Classification Algorithm and Feature Selection Method**
+
+| Method | Term Frequency | TF-IDF | Bigrams |
+|--------|----------------|--------|---------|
+| **Naive Bayes** | 0.59951 | 0.36555 | 0.43707 |
+| **Random Forest** | 0.25501 | 0.22665 | 0.22829 |
+| **XGBoost** | 0.30545 | 0.31763 | 0.32089 |
+
+Here, a combination of TF-IDF and Random Forests seem to work the best, although without tuning each combination we won't know the optimal pair for sure.
+
+## Conclusion ##
+We've seen how to scrape for songs and lyrics, generate features and build models in R. In the next part, we'll take at look at using more cutting-edge techniques for feature engineering and modelling using Neural Networks in tensorflow.
