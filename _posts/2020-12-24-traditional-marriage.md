@@ -6,6 +6,7 @@ categories: blog
 tag: Python, Mathematics, Economics
 mathjax: true
 ---
+_If you'd like to try the code out for yourself, the scripts can be found [here](https://github.com/ethan-cheong/randomWalks/tree/main/traditionalMarriage)_
 
 Whilst (tragically) revisiting assignments for my introductory analysis course over winter break, I chanced upon this problem involving the traditional marriage algorithm. I had glanced over this question during the term-time, but recently I've become interested in the similarities between discrete math and object-oriented programming, and thought it would be worth taking a second look. If you'd like to give it a try, the full problem set can be found [here](/assets/traditionalmarriage/03ex.pdf) (all credits to Professor Peter Allen).
 
