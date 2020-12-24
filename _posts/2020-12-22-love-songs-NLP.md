@@ -3,7 +3,7 @@ layout: post
 title: Love Song Classification with R
 date: 2020-12-22
 categories: blog
-tag: Projects
+tag: Projects, R, ML, NLP
 ---
 _You can find the datasets and code for this project here: [github.com/ethan-cheong/loveSongs](http://github.com/ethan-cheong/loveSongs)_
 
@@ -423,7 +423,7 @@ We can now see clear differences between the two song types! Even just consideri
 
 We also see the phrase "love" turn up with higher relative density in love songs, which is to be expected. Words in our top 45 list that are unique to love songs include "heart", "would" (perhaps the singer is making promises?) and "fall", whilst those unique to other songs seem to be mostly swear words. Of course, the presence of these words alone isn't enough to determine whether a song is a love song, which is where the next few steps come in.
 ## Feature Engineering ##
-Our data currently has a long string of lyrics for each song, and we have to convert it to a form that we can feed into our algorithms. Here, we explore several more traditional methods for coming up with these features, namely TF-IDF and n-grams. In a future post, we'll look at models that use Convoluted Neural Networks like BERT.
+Our data currently has a long string of lyrics for each song, and we have to convert it to a form that we can feed into our algorithms. Here, we explore several more traditional methods for coming up with these features, namely TF-IDF and n-grams.
 ### TF-IDF ###
 Our goal is to generate a matrix where each row represents a song and each column represents a possible word in the song. We say _possible_ word because we need some measure of whether a song does not contain a word, in which case the entry for that word column will be 0. The number of rows should then be equal to the total number of words, without repeats, of every single song we have in our dataset - we call this huge list of words our **corpus**.
 
@@ -472,7 +472,7 @@ Using `view(tfidf.df)`, we can see that we have a `data.frame` with 4453 documen
 
 ![image2](/assets/lovesongs/image2.png)
 
-Notice how _sparse_ this dataframe is - many of the entries are 0, which correspond to songs that don't have the word encoded by that particular column.
+Notice how _sparse_ this dataframe is - many of the entries are 0, which correspond to songs that don't contain the word encoded by that particular column.
 
 We can also get a similar dataframe `tf.idf` that uses term frequency instead of TF-IDF by setting the `weighting` parameter of `DocumentTermMatrix()` to `weightTf`.
 
@@ -480,7 +480,7 @@ We can also get a similar dataframe `tf.idf` that uses term frequency instead of
 
 Notice that the entries of this dataframe are integers, which indicate how many times a particular term appears in a song.
 ### N-grams ###
-Some words take on a different meaning when they're paired together with other words - a simple example would be something like "lost" and "get lost", which have different connotations. Since combinations of words have the potential to carry meaning that might be lost when we split words up, we can instead split up our words into combinations of n different words - called an n-gram. We can then follow the same procedure as before, but instead of each term occupying a column we have an n-gram.
+Some words take on a different meaning when they're paired together with other words - a simple example would be something like "lost" and "get lost", which clearly have different connotations. Since combinations of words have the potential to carry meaning that might be lost when we split words up, we can instead split up our words into combinations of n different words - called an n-gram. We can then follow the same procedure as before, but instead of each term occupying a column we have an n-gram.
 
 We implement bigrams below:
 {% highlight R %}
@@ -638,7 +638,7 @@ In addition to the tf-idf feature set, we can also look at how well the untuned 
 | **Random Forest** | 0.25501 | 0.22665 | 0.22829 |
 | **XGBoost** | 0.30545 | 0.31763 | 0.32089 |
 
-Here, a combination of TF-IDF and Random Forests seem to work the best, although without tuning each combination we won't know the optimal pair for sure.
+Here, a combination of TF-IDF and Random Forests seem to work the best, although without fine-tuning each combination we won't know the optimal pair for sure.
 
 ## Conclusion ##
-We've seen how to scrape for songs and lyrics, generate features and build models in R. In the next part, we'll take at look at using more cutting-edge techniques for feature engineering and modelling using Neural Networks in tensorflow.
+We've seen how to scrape for songs and lyrics, generate features and build models in R. In the next part, we'll take at look at more sophisticated techniques for feature engineering and modelling using Neural Networks.
