@@ -285,14 +285,15 @@ def updateWorld(men_array):
 
 The functions above allow us to move men one step at a time and plot out each step. We can then combine these with our main algorithm functions to get our full animation (the code can be found in `animations.py` on my github if you'd like to play around with it).
 
-The example to the right pairs up 20 men with 20 women; we can see that for this particular combination of men and women, the algorithm took 15 iterations to get our pairs. Remember that this changes depending on the (unseen) personal preferences of each man and woman!
+The example to the right pairs up 20 men with 20 women; we can see that for this particular combination of men and women, the algorithm took 15 iterations to get our pairs. Remember that the number of iterations changes depending on the (unseen) personal preferences of each man and woman!
 
-![gif2](\assets\traditionalmarriage\gif2.gif){: style="float: left"}
-Here's what happens when you have 5 men, all with the same preference in women. We see that it takes 5 nights in this case, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to.
+![gif2](\assets\traditionalmarriage\gif2.gif){: style="float: right"}
+
+Here's what happens when you have 5 men, all with the same preference in women. We see that it takes 5 nights in this case, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to. Something I'd like to implement next is a unique colour for each man and woman - that way we can see how each individual changes their preferences as the nights go on - just because a woman picks a man for most of the nights doesn't mean she'll end up marrying him!
 
 Finally, here's the algorithm in action on 50 pairs of men and women.
 ![gif3](\assets\traditionalmarriage\gif3.gif)
-Something I'd like to implement next is a unique colour for each man and woman - that way our animations can tell us easily who ends up paired with who.
+
 
 ### Checking for stability ###
 
