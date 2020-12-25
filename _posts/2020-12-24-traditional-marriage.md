@@ -21,7 +21,9 @@ The traditional marriage algorithm is as follows:
 
 The fact that this problem reduces in size after each iteration (as well as the fact that it was in an induction problem set) hints that the solution to the problems above involve induction. And something I noticed during the term was the relationship between induction and recursion - both involve a base case, and both involve Professor Allen's somewhat disliked phrase "and so on..." I thought it an interesting link between something I'd learned in my Math degree and a coding concept that I'd picked up in an MOOC, and thought it'd be worth exploring in greater depth.
 
-### Applying the algorithm ###
+In my implementation, I emphasize intuitive code over performance - this could be a useful starting point for someone looking to understand the logic before implementing a more efficient version.
+
+### Implementing the algorithm ###
 Let's try applying the traditional marriage algorithm. Our plan of attack is as follows:
 1. Find a way to represent a man, woman and their preferences.
 2. Implement the traditional marriage algorithm
@@ -53,9 +55,6 @@ class Person:
     def getPreferences(self):
         return self.preferences
 
-    def setPreferences(self, input):
-        # Takes a list as input, allowing us to set custom preferences
-        self.preferences = collections.deque(input)
 {% endhighlight %}
 Next, we can make classes for men and women that inherit from `Person`. Men will have the `getRejected` function, and an additional list `remaining_preferences` to track the women that haven't rejected them. Although the list of their preferences is shortened as nights pass, we need their original preferences so that we can check for cheating at the end.
 {% highlight python %}
@@ -68,10 +67,13 @@ class Man(Person):
     def getRemainingPreferences(self):
         return self.remaining_preferences
 
+    def setRemainingPreferences(self, input):
+        self.remaining_preferences = collections.deque(input)
+
     def getRejected(self):
         self.remaining_preferences.popleft() # time complexity O(1)
 {% endhighlight %}
-Women need several additional characteristics: they have a `man_list`, which shows the men that visit them each night. We need to be able to add men to this list, as well as clear the list after each night. They also need the ability to choose their most preferred men, as well as generate a list of men that they reject.
+Women need several additional characteristics: they have a `man_list`, which shows the men that visit them each night. We need to be able to add men to this list, as well as clear the list after each night. They also need the ability to choose their most preferred men, as well as generate a list of men that they reject. Finally, we should also add the ability to adjust their preferences.
 {% highlight python %}
 class Woman(Person):
     def __init__(self, identity, n):
@@ -101,6 +103,8 @@ class Woman(Person):
         rejected_men = self.man_list[:]
         rejected_men.remove(chosen_man)
         return rejected_men
+    def setPreferences(self, input):
+        self.preferences = collections.deque(input)
 {% endhighlight %}
 `initializePeople` creates 2 arrays with n men and women each. I chose to keep this in a separate function so we could tweak the arrays we give our main function later if necessary.
 {% highlight python %}
@@ -157,10 +161,141 @@ def traditionalMarriage(men, women):
 When we run the algorithm with 5 pairs (`traditionalMarriage(*initializePeople(5))`), it looks something like this:
 ![image1](/assets/traditionalMarriage/image1.png)
 Of course, it would be nicer if we had a visualization of the algorithm in action.
+### Visualizing the algorithm ###
+We can use `matplotlib` to make animations showing how the algorithm works. Firstly, we need to update our classes for men and women to contain modifiable row and column positions, so that they can be represented and manipulated in 2D space.
 {% highlight python %}
+class Man(Person):
+    def __init__(self, identity, n):
+        # Representation of a man
+        super().__init__(identity, n)
+        self.remaining_preferences = copy.copy(self.preferences)
+        # set starting coordinates for visualization later
+        self.row_position = 2 * n - 1
+        self.col_position = 2 * identity + 1
 
+    def getPosition(self):
+        return (self.row_position, self.col_position)
+
+    def updatePosition(self, new_row_position, new_col_position):
+        self.row_position = new_row_position
+        self.col_position = new_col_position
+
+    def resetPosition(self):
+        self.row_position = 2 * self.n - 1
+        self.col_position = 2 * self.identity + 1
 {% endhighlight %}
-
+Since women won't have to move (the men will be courting them), they only need a `getPosition` function.
 {% highlight python %}
+class Woman(Person):
+    def __init__(self, identity, n):
+        # Representation of a woman
+        super().__init__(identity, n)
+        self.man_list = []
+        self.row_position = 1
+        self.col_position = 2 * identity + 1
 
+    def getPosition(self):
+        return (self.row_position, self.col_position)
 {% endhighlight %}
+Now, we need some way to represent the space the men and women are in - we can use a numpy array for this! I chose numpy arrays because they're easy to initialize and manipulate.
+
+ The function below returns a numpy array with women represented by '0.7's, men with '0.3's and empty spaces with zeroes. The reason for this seemingly arbitrary choice will become clear soon.
+{% highlight python %}
+import numpy as np
+
+def updateWorld(men_array):
+    # Function to plot the world based on current positions of men
+    n = len(men_array)
+    world = np.zeros((2*n+1, 2*n+1))
+    # Fill in females
+    for i in range(1,2*n+1,2):
+            world[1, i]=0.7
+    # Fill in males
+    for man in men_array:
+        current_row_position = man.getPosition()[0]
+        current_col_position = man.getPosition()[1]
+        world[current_row_position, current_col_position] = 0.3
+    return world
+{% endhighlight %}
+Let's see what it looks like when we start a world with 5 pairs of people:
+{% highlight python %}
+men_array, women_array = initializePeople(5)
+world = updateWorld(men_array)
+print(world)
+{% endhighlight %}
+{:refdef: style="text-align: center;"}
+![image2](/assets/traditionalMarriage/image2.png)
+{: refdef}
+We see that we get a nice array which we can now visualize. `matplotlib` has a convenient function `imshow` which outputs a grid of colours corresponding to each entry in an array. The colour mapped depends on the numerical value in each array entry; here's what it looks like when we apply it to our world:
+{% highlight python %}
+import matplotlib.pyplot as plt
+
+plt.imshow(world, cmap="inferno", vmin=0, vmax=1)
+{% endhighlight %}
+{:refdef: style="text-align: center;"}
+![image3](/assets/traditionalMarriage/image3.png)
+{: refdef}
+We have a good starting point! Each orange square represents a man and each purple square a woman. Next, we need a way to show the men moving towards the women they're courting; `moveMen` does that by checking the position of each man with respect to their desired partner, and then updating their position accordingly.
+{% highlight python %}
+def moveMen(world, men_array, women_array):
+    for man in men_array:
+        current_row_position = man.getPosition()[0]
+        current_col_position = man.getPosition()[1]
+        favourite_woman = man.getRemainingPreferences()[0]
+        goal_row_position = women_array[favourite_woman].getPosition()[0]
+        goal_col_position = women_array[favourite_woman].getPosition()[1]
+
+        if current_col_position == goal_col_position and current_row_position == goal_row_position:
+            # Men will not move if they are in the same position as their desired partner.
+            pass
+        elif current_col_position == goal_col_position:
+             # Men will move vertically by one square if they are in the same column as their desired partner.
+            man.updatePosition(current_row_position - 1, current_col_position)
+        elif current_col_position > goal_col_position:
+            # Men will move horizontally if they are in the wrong column. Here they move to the left.
+            man.updatePosition(current_row_position, current_col_position - 1)
+        elif current_col_position < goal_col_position:
+            # Here they move to the right.
+            man.updatePosition(current_row_position, current_col_position + 1)
+{% endhighlight %}
+We also have to change our `updateWorld` function to account for when men and women stand on the same square, or when two men stand on the same square:
+{% highlight python %}
+def updateWorld(men_array):
+    n = len(men_array)
+    world = np.zeros((2*n+1, 2*n+1))
+    # Fill in females
+    for i in range(1,2*n+1,2):
+            world[1, i]=0.7
+    # Fill in males
+    for man in men_array:
+        current_row_position = man.getPosition()[0]
+        current_col_position = man.getPosition()[1]
+        if world[current_row_position, current_col_position] > 0.7:
+            # Change the colour if there are men who reach the female tile.
+            world[current_row_position, current_col_position] += 0.08
+        elif world[current_row_position, current_col_position] == 0:
+            # Change the colour if a man steps on an empty tile.
+            world[current_row_position, current_col_position] = 0.3
+        else:
+            # Change the colour if two men step on the same tile.
+            world[current_row_position, current_col_position] += 0.1
+    return world
+{% endhighlight %}
+![gif1](\assets\traditionalmarriage\gif1.gif){: style="float: right"}
+
+The functions above allow us to move men one step at a time and plot out each step. We can then combine these with our main algorithm functions to get our full animation (the code can be found in `animations.py` on my github if you'd like to play around with it).
+
+The example to the right pairs up 20 men with 20 women; we can see that for this particular combination of men and women, the algorithm took 15 iterations to get our pairs. Remember that this changes depending on the (unseen) personal preferences of each man and woman!
+
+![gif2](\assets\traditionalmarriage\gif2.gif){: style="float: left"}
+Here's what happens when you have 5 men, all with the same preference in women. We see that it takes 5 nights in this case, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to.
+
+Finally, here's the algorithm in action on 50 pairs of men and women.
+![gif3](\assets\traditionalmarriage\gif3.gif)
+Something I'd like to implement next is a unique colour for each man and woman - that way our animations can tell us easily who ends up paired with who.
+
+### Checking for stability ###
+
+###
+
+### What if people lie about their preferences? ###
