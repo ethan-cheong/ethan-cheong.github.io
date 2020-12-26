@@ -56,7 +56,7 @@ class Person:
         return self.preferences
 
 {% endhighlight %}
-Next, we can make classes for men and women that inherit from `Person`. Men will have the `getRejected` function, and an additional list `remaining_preferences` to track the women that haven't rejected them. Although the list of their preferences is shortened as nights pass, we need their original preferences so that we can check for cheating at the end.
+Next, we can make classes for men and women that inherit from `Person`. Men will have the `getRejected` function, and an additional list `remaining_preferences` to track the women that haven't rejected them. Although the list of their preferences is shortened as nights pass, we need their original preferences so that we can check for cheating at the end. We can also change their preferences with `setRemainingPreferences`.
 {% highlight python %}
 class Man(Person):
     def __init__(self, identity, n):
@@ -103,6 +103,7 @@ class Woman(Person):
         rejected_men = self.man_list[:]
         rejected_men.remove(chosen_man)
         return rejected_men
+
     def setPreferences(self, input):
         self.preferences = collections.deque(input)
 {% endhighlight %}
@@ -114,7 +115,7 @@ def initializePeople(n):
     women = [Woman(i, n) for i in range(n)]
     return (men,women)
 {% endhighlight %}
-`nightIteration` does the bulk of the work - it implements the sequence of events that happens each night. The implementation is VERY inefficient due to the number of nested for loops - although I've decided to leave them in, since they capture the logic that's used in the algorithm itself, which will be useful when visualizing the algorithm in action. There's definitely a way to optimize this with matrix algebra - feel free to fork the repo if you're interested!
+`nightIteration` does the bulk of the work - it implements the sequence of events that happens each night. The implementation is VERY inefficient due to the number of nested for loops - although I've decided to leave them in, since they capture the logic that's used in the algorithm itself, which will be useful when visualizing the algorithm in action. There should be a way to optimize this with matrix algebra - feel free to fork the repo if you'd like to give it a try.
 {% highlight python %}
 def nightIteration(men_array, women_array):
     # Function for each night that passes
@@ -166,12 +167,11 @@ We can use `matplotlib` to make animations showing how the algorithm works. Firs
 {% highlight python %}
 class Man(Person):
     def __init__(self, identity, n):
-        # Representation of a man
         super().__init__(identity, n)
         self.remaining_preferences = copy.copy(self.preferences)
         # set starting coordinates for visualization later
-        self.row_position = 2 * n - 1
-        self.col_position = 2 * identity + 1
+        self.row_position = 2 * n - 1        # Puts the men in the second row from the bottom
+        self.col_position = 2 * identity + 1 # Leaves one column between each man
 
     def getPosition(self):
         return (self.row_position, self.col_position)
@@ -184,7 +184,7 @@ class Man(Person):
         self.row_position = 2 * self.n - 1
         self.col_position = 2 * self.identity + 1
 {% endhighlight %}
-Since women won't have to move (the men will be courting them), they only need a `getPosition` function.
+Since women won't have to move (the men will be going to them), they only need a `getPosition` function so the men know their position.
 {% highlight python %}
 class Woman(Person):
     def __init__(self, identity, n):
@@ -197,9 +197,9 @@ class Woman(Person):
     def getPosition(self):
         return (self.row_position, self.col_position)
 {% endhighlight %}
-Now, we need some way to represent the space the men and women are in - we can use a numpy array for this! I chose numpy arrays because they're easy to initialize and manipulate.
+Now, we need some way to represent the space the men and women are in - I chose to use numpy arrays because they're easy to initialize and manipulate.
 
- The function below returns a numpy array with women represented by '0.7's, men with '0.3's and empty spaces with zeroes. The reason for this seemingly arbitrary choice will become clear soon.
+The function below returns a numpy array with women represented by '0.7's, men with '0.3's and empty spaces with zeroes. The reason for this seemingly arbitrary choice will be apparent soon.
 {% highlight python %}
 import numpy as np
 
@@ -226,7 +226,7 @@ print(world)
 {:refdef: style="text-align: center;"}
 ![image2](/assets/traditionalMarriage/image2.png)
 {: refdef}
-We see that we get a nice array which we can now visualize. `matplotlib` has a convenient function `imshow` which outputs a grid of colours corresponding to each entry in an array. The colour mapped depends on the numerical value in each array entry; here's what it looks like when we apply it to our world:
+We see that we get a nice array which we can turn into a visualization. `matplotlib` has a convenient function `imshow` which outputs a grid of colours corresponding to each entry in an array. The colour mapped depends on the numerical value in each array entry; here's what it looks like when we apply it to our world:
 {% highlight python %}
 import matplotlib.pyplot as plt
 
@@ -235,7 +235,7 @@ plt.imshow(world, cmap="inferno", vmin=0, vmax=1)
 {:refdef: style="text-align: center;"}
 ![image3](/assets/traditionalMarriage/image3.png)
 {: refdef}
-We have a good starting point! Each orange square represents a man and each purple square a woman. Next, we need a way to show the men moving towards the women they're courting; `moveMen` does that by checking the position of each man with respect to their desired partner, and then updating their position accordingly.
+This is a good starting point! Each orange square represents a man and each purple square a woman. Next, we need a way to make the men moving towards the women they're courting; `moveMen` does that by checking the position of each man with respect to their desired partner, and then moving them by one square.
 {% highlight python %}
 def moveMen(world, men_array, women_array):
     for man in men_array:
@@ -289,11 +289,12 @@ The example to the right pairs up 20 men with 20 women; we can see that for this
 
 ![gif2](\assets\traditionalmarriage\gif2.gif){: style="float: right"}
 
-Here's what happens when you have 5 men, all with the same preference in women. We see that it takes 5 nights in this case, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to. Something I'd like to implement next is a unique colour for each man and woman - that way we can see how each individual changes their preferences as the nights go on - just because a woman picks a man for most of the nights doesn't mean she'll end up marrying him!
+Here's what happens when you have 5 men, all with the same preferences in women. We see that it takes 5 nights, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to. Something I'd like to implement next is a unique colour for each man and woman - that way we can see how each individual changes their preferences as the nights go on. Just because a woman picks a man for most of the nights, doesn't mean she'll end up marrying him!
 
-Finally, here's the algorithm in action on 50 pairs of men and women.
+Finally, just for fun, here's the algorithm in action on 50 pairs of men and women.
 ![gif3](\assets\traditionalmarriage\gif3.gif)
 
+### The coloured version ###
 
 ### Checking for stability ###
 

@@ -1,12 +1,15 @@
 ---
 layout: page
-title: About Me
+title: About
 permalink: /about
 ---
 
-I'm a 1st year undergraduate student at the London School of Economics,
-studying Economics. I'm interested in machine / statistical learning (particularly
-computer vision and natural language processing), and am exploring how they may
-be applied to economic research.\
-\
+I'm a first-year BSc Economics student at the London School of Economics, interested in:
+* Machine Learning (Particularly NLP and Computer Vision, and applying them to Economics Research)
+* Math problems - recently interested in Algorithms and Discrete Math
+* Language Acquisition
+* Constant Learning!
+
+Looking for opportunities to improve my writing skills.
+
 You can find my CV [here](/assets/Ethan's CV.pdf)
