@@ -1,7 +1,7 @@
 ---
 layout: page
 title: About
-permalink: /about
+permalink: /about/
 ---
 
 I'm a first-year BSc Economics student at the London School of Economics, interested in:
@@ -10,6 +10,6 @@ I'm a first-year BSc Economics student at the London School of Economics, intere
 * Language Acquisition
 * Constant Learning!
 
-Looking for opportunities to improve my writing skills.
+Looking for opportunities related to economic research, statistics/data analytics, or to improve my writing skills.
 
 You can find my CV [here](/assets/Ethan's CV.pdf)

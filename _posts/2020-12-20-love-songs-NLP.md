@@ -1,11 +1,15 @@
 ---
 layout: post
-title: Love Song Classification with R
-date: 2020-12-22
+title: Love Song Classification with R (Part 1)
+date: 2020-12-18
 categories: blog
 tag: Projects, R, ML, NLP
+mathjax: true
+permalink: /love-song-classification-1/
 ---
 _You can find the datasets and code for this project here: [github.com/ethan-cheong/loveSongs](http://github.com/ethan-cheong/loveSongs)_
+
+_This is a long post! I go over each step of the project, as well as the theory behind the algorithms that I've applied._
 
 ## Motivation ##
 
@@ -511,7 +515,7 @@ bigrams.df <- data.frame(as.matrix(bigrams.dtm),
 bigrams.df$song.label <- song.data.clean$love.song
 {% endraw %}
 {% endhighlight %}
-In a future post, we'll try more modern methods of creating word embeddings using frameworks like ELMo - for now, let's try modelling using the feature sets we have now.
+In a future post, we'll try more modern methods of creating word embeddings using frameworks like ELMo - for now, let's try modelling using the features we have.
 
 ## Modelling ##
 We'll use `mlr3` to implement our machine learning algorithms - this is the newest version of the `mlr` package, a very popular tool for running these algorithms in R. I particularly like how this package integrates the whole modelling process into a pipeline, letting you quickly try multiple algorithms at once.
@@ -569,11 +573,68 @@ bmr$aggregate(measures)
 ![image4](/assets/lovesongs/image4.png)
 
 We can see that Random Forests give us the lowest test error, followed by XGboost - it's worth looking deeper into these algorithms to understand what they're doing. (This will help us with parameter tuning - also, it's always nice to know more things!)
-### XGBoost ###
-XGBoost is a form of _gradient boosting_, which works by combining the outputs of many "weak" classifiers to produce a powerful "committee".
+### Gradient Tree Boosting and XGBoost ###
+This next section gets slightly more involved; there's some scary mathematical notation, but the fundamental principles are quite intuitive!
+Most of the information here on boosting was taken from [_An Introduction to Statistical Learning with Applications in R_]({https://d1wqtxts1xzle7.cloudfront.net/60707896/An_Introduction_to_Statistical_Learning_with_Applications_in_R-Springer_201320190925-63943-2cqzhk.pdf?1569478040=&response-content-disposition=inline%3B+filename%3DAn_Introduction_to_Statistical_Learning.pdf&Expires=1608995359&Signature=gwbUT4vRsvApjxQvKcsL~Og~58zWn7-7eGNSJ~JNVItVp5Cpjea4TmnsuED0J7TsqPPBQZM7ETsSgm~0L4UYPcuJMOb~8qeph3inbWjbnb9hOW2CqCAaqEnUfw7m0BPxGIB2RCdl0FS3YEccDGaFdLlC1jb5V6lnplq4XJQqNX3BdYRJ0kf9rjMbWSFTCvd20ycwA007rZWkemtYstqCbu6f5spIXCe24DBlwzxPFLkb2QwGCDaHwZ5RP9Z-mrB3af-UafktNxYtB8AdhpAvY68o5h-A~Tr08roXWgomxKTlFJSQwKmjdhI5cRnCTO9ZzJlRcxL3H6fr-cWJajg4Cg__&Key-Pair-Id=APKAJLOHF5GGSLRBV4ZA}) and [_The Elements of Statistical Learning_]({https://web.stanford.edu/~hastie/ElemStatLearn/}) - the latter is widely regarded as the gold standard reference for fundamental machine learning, and the former is a less in-depth version by the same authors, intended for beginners. I'd read ISLR before, but found the explanation in the boosting section to be slightly lacking, and referred to ESL to learn more.
+
+Gradient tree boosting works by acting on _decision trees_; you can find more about them and how they're trained from the sources I've linked above. For now, it's sufficient to know that decision trees are considered _weak classifiers_, i.e. they perform only slightly better than random guessing. Fortunately, boosting can improve their performance, and does so by involves combining many weak classifiers to make a more robust classifier. The first instance of this was AdaBoost, which involves sequentially training new classifiers on the mistakes of old ones.
+#### AdaBoost as an Example of a Boosting Model ####
+Here's how AdaBoost works: each classifier trains on a random subset of the training data. After training one classifier, AdaBoost takes the training observations it misclassified and increases the probability they are selected for the next classifier, so the next classifier can try training on them.
+
+After training all our "committee" of classifiers, we take a weighted "vote" of the entire committee, with the classifiers with lower error rate having a bigger say in the vote, and classifiers with error rate greater than 50% (worse than random chance!) having a _negative vote_ - in other words, whatever that classifier says, we do the opposite.
+#### Similarities between Boosting and Additive Models ####
+An additive model is a model that outputs an _additive expansion_, which are simply linear combinations with coefficients $$\beta_m$$ of a _basis function_ $$b(x; \gamma_m)$$. The generic form of an additive expansion looks something like this:
+
+<center>
+$$ f(x) = \sum_{m=1}^M\beta_mb(x;\gamma_m)$$
+</center>
+
+The basis function $$b(x;\gamma)\in\mathbb{R})$$ can be any function that takes an input $$x$$ and is parameterized by a some parameters $$\gamma$$. Say the basis function is a linear function $$b(x;\gamma) = \gamma_0 + \gamma_1x$$; then, its additive expansion takes the form:
+
+<center>
+$$ f(x) = \sum_{m=1}^M\beta_mb(x;\gamma_m) = \beta_1(\gamma_{10}+\gamma_{11}x) + \beta_2(\gamma_{20}+\gamma_{21}x) + \ldots + \beta_M(\gamma_{M0}+\gamma_{M1}x)$$
+</center>
+
+Fitting an additive model involves minimizing a _loss function_ $$L(y, f(x))$$. The function can be something like weighted least squares, where we have the actual value of the observation $$y$$ and our prediction $$f(x)$$ - the loss function then captures how "off" the prediction was from the actual observation. Fitting the model can then be expressed as an optimization problem:
+
+<center>
+$$ min_{(\beta_m,\gamma_m)^M_1} \sum^N_{i=1}L(y_i,\sum^M_{m=1}\beta_mb(x_i;\gamma_m))$$
+</center>
+
+This looks pretty scary, particularly due to the double summation, but it's mostly due to the notation used - the logic is quite intuitive! All this is saying is that we find the loss of the predictor (which is expressed as an additive expansion) for each of $$N$$ training observations, sum those losses, and then find the set of parameters $$\beta_1, \beta_2 \ldots \beta_M$$ and $$\gamma_1, \gamma_2 \ldots \gamma_M$$ of the additive expansion that minimizes this sum.
+
+How is this relevant? Well, the authors of ESL found that fitting a boosting model was fundamentally the same as fitting an additive model.
+If we take the basis formula to be a weak classifier, the additive expansion is exactly the weighted vote of our committee of weak classifiers, with the parameters $$\beta_i$$ representing the weights that classifier $$i$$ holds in the final vote, and $$\gamma_i$$ corresponding to the set of parameters of $$i$$. To fit our committee to training data, we need to minimize the error of our weighted vote - in other words, we need to minimize a loss function, which is exactly the problem we talked about above!
+
+We now know that fitting a boosting model can be representing as an optimization problem, but how do we solve it? It turns out to be very difficult to optimize all our parameters at once, so we have to use an approximation.
+#### Fitting Additive Models ####
+Remember: we are trying to solve the problem:
+<center>
+$$ min_{(\beta_m,\gamma_m)^M_1} \sum^N_{i=1}L(y_i,\sum^M_{m=1}\beta_mb(x_i;\gamma_m))$$
+</center> So that we can get the parameters for a predictive function in the form
+<center>
+$$ f(x) = \sum_{m=1}^M\beta_mb(x;\gamma_m)$$
+</center>
+The algorithm we use is called _Forward Stagewise Additive Modelling_, and works as follows:
+1. Set $$f_0(x)=0$$
+2. For $$m=1,2\ldots M$$:
+ - Compute the coefficients $$(\beta_m,\gamma_m)$$ that minimize the total loss for all training observations
+
+
+#### Gradient Tree Boosting ####
+
+#### Regularizing Boosted Trees ####
+
+#### XGBoost ####
+
+#### Regularizing XGBoost ####
+
+#### XGBoost Parameter Optimization ####
 
 ### Random Forests ###
 Random forests involve multiple random decision trees, with each tree being grown on a random sample of the original data, and with a random subset of features being selected at each node to generate the best split.
+
+
 
 Although parameter tuning doesn't play as big a role in training a Random Forest, we can still do some tuning below:
 {% highlight R %}

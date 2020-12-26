@@ -3,14 +3,15 @@ layout: post
 title: The Traditional Marriage Algorithm in Python
 date: 2020-12-24
 categories: blog
-tag: Python, Mathematics, Economics
+tag: Mathematics, Economics, Python
 mathjax: true
+permalink: /traditional-marriage/
 ---
 _If you'd like to try the code out for yourself, the scripts can be found [here](https://github.com/ethan-cheong/randomWalks/tree/main/traditionalMarriage)_
 
-Whilst (tragically) revisiting assignments for my introductory analysis course over winter break, I chanced upon this problem involving the traditional marriage algorithm. I had glanced over this question during the term-time, but recently I've become interested in the similarities between discrete math and object-oriented programming, and thought it would be worth taking a second look. If you'd like to give it a try, the full problem set can be found [here](\assets\traditionalmarriage\03ex.pdf) (all credits to Professor Peter Allen).
+Whilst (tragically) revisiting assignments for my introductory analysis course over winter break, I chanced upon this problem involving the traditional marriage algorithm. I had glanced over this question during the term-time, but recently I've become interested in object-oriented programming, and thought it would be worth taking a second look. If you'd like to give it a try, the full problem set can be found [here](\assets\traditionalmarriage\03ex.pdf) (all credits to Professor Peter Allen).
 
-The problem is as follows: we have _n_ men and _n_ women, and need to pair them off. Each man wants to marry a woman, and vice versa. Furthermore, each man and woman have a personal ranking of the member of the other sex they'd like to marry.
+The problem is as follows: we have _n_ men and _n_ women, and need to pair them off. Each man wants to marry a woman, and vice versa. Furthermore, each man and woman have a personal ranking of the member of the other sex they'd like to marry. This problem can represent a variety of real-world situations - one notable example is assigning graduating medical students to their first hospital appointments.
 
 We have to pair off all the men and women. However, if there exists a man and woman who both prefer each other to their assigned partner, then they will cheat. We say an arrangement is _stable_ when there are no such cheating pairs.
 
@@ -21,10 +22,10 @@ The traditional marriage algorithm is as follows:
 
 The fact that this problem reduces in size after each iteration (as well as the fact that it was in an induction problem set) hints that the solution to the problems above involve induction - we can use induction to prove that the pairs produced by this algorithm are always stable.
 
-In my implementation, I emphasize intuitive code over performance - this could be a useful starting point for someone looking to understand the logic before implementing a more efficient version.
+In my implementation, I emphasize intuitive code over performance - you may well see examples of terrible practices, like several nested for loops - as I'm more focused on making the logic easily comprehensible. This could be a useful starting point for someone looking to understand the logical flow before implementing a more efficient version.
 
-### Implementing the algorithm ###
-Let's try applying the traditional marriage algorithm. Our plan of attack is as follows:
+### Implementing the Algorithm ###
+Our plan of attack is as follows:
 1. Find a way to represent a man, woman and their preferences.
 2. Implement the traditional marriage algorithm
 3. Visualization of the algorithm
@@ -32,7 +33,7 @@ Let's try applying the traditional marriage algorithm. Our plan of attack is as 
 5. Prove that the arrangements given by the algorithm are always stable.
 6. Try out other situations - e.g. if men or women lie about their preferences.
 
-First, let's make representations for a person. We'll give each person an identity from 0 to n-1 (with n being the number of pairs, and following python's counting convention). We represent each person's preferences as a list and randomize them, then convert these to a deque. Compared to lists, deques have better performance for popping entries from the front and back.
+First, let's make representations for a person. We'll give each person an `identity` from 0 to n-1, following python's counting convention (with n being the number of pairs). We represent each person's preferences as a list and randomize them, then convert these to a deque. Compared to lists, deques have better performance for popping entries from the front and back.
 {% highlight python %}
 import random
 import collections # For improved time complexity
@@ -54,9 +55,8 @@ class Person:
 
     def getPreferences(self):
         return self.preferences
-
 {% endhighlight %}
-Next, we can make classes for men and women that inherit from `Person`. Men will have the `getRejected` function, and an additional list `remaining_preferences` to track the women that haven't rejected them. Although the list of their preferences is shortened as nights pass, we need their original preferences so that we can check for cheating at the end. We can also change their preferences with `setRemainingPreferences`.
+Next, we can make classes for men and women that inherit from `Person`. Men will have the `getRejected` function, and an additional list `remaining_preferences` to track the women that haven't rejected them. Although the list of their preferences is shortened as nights pass, we will need their original preferences after the algorithm terminates so we can check for stability. We can also change their preferences with `setRemainingPreferences` - letting us represent men with non-random preferences.
 {% highlight python %}
 class Man(Person):
     def __init__(self, identity, n):
@@ -71,7 +71,7 @@ class Man(Person):
         self.remaining_preferences = collections.deque(input)
 
     def getRejected(self):
-        self.remaining_preferences.popleft() # time complexity O(1)
+        self.remaining_preferences.popleft()
 {% endhighlight %}
 Women need several additional characteristics: they have a `man_list`, which shows the men that visit them each night. We need to be able to add men to this list, as well as clear the list after each night. They also need the ability to choose their most preferred men, as well as generate a list of men that they reject. Finally, we should also add the ability to adjust their preferences.
 {% highlight python %}
@@ -162,7 +162,7 @@ def traditionalMarriage(men, women):
 When we run the algorithm with 5 pairs (`traditionalMarriage(*initializePeople(5))`), it looks something like this:
 ![image1](\assets\traditionalMarriage\image1.png)
 Of course, it would be nice if we had a visualization of the algorithm in action.
-### Visualizing the algorithm ###
+### Visualizing the Algorithm ###
 We can use `matplotlib` to make animations showing how the algorithm works. Firstly, we need to update our classes for men and women to contain modifiable row and column positions, so that they can be represented and manipulated in 2D space.
 {% highlight python %}
 class Man(Person):
@@ -361,6 +361,8 @@ sum(bool_list) # Remember that when performing arithmetic on boolean values, Tru
 {% endhighlight %}
 We get an output of `1000`. Thus, the algorithm gave stable arrangements 1000/1000 times when we had 100 pairs of men and women; how do we prove it **always** gives a stable arrangement?
 ### Proving Stability ###
-This next part gets slightly involved!
+This next bit gets quite involved, but I feel it's a nice introduction to what a formal mathematical proof looks like.
+
+How can we prove this algorithm is always stable? As hinted in the start, we can use mathematical induction.
 
 ### What if people lie about their preferences? ###
