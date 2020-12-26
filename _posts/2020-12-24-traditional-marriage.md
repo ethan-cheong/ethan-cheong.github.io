@@ -19,7 +19,7 @@ The traditional marriage algorithm is as follows:
 2. Each woman looks at the men visiting her, and rejects all but her most preferred among that collection.
 3. Repeat until the night where every woman is visited by exactly one man, where they get married.
 
-The fact that this problem reduces in size after each iteration (as well as the fact that it was in an induction problem set) hints that the solution to the problems above involve induction. And something I noticed during the term was the relationship between induction and recursion - both involve a base case, and both involve Professor Allen's somewhat disliked phrase "and so on..." I thought it an interesting link between something I'd learned in my Math degree and a coding concept that I'd picked up in an MOOC, and thought it'd be worth exploring in greater depth.
+The fact that this problem reduces in size after each iteration (as well as the fact that it was in an induction problem set) hints that the solution to the problems above involve induction - we can use induction to prove that the pairs produced by this algorithm are always stable.
 
 In my implementation, I emphasize intuitive code over performance - this could be a useful starting point for someone looking to understand the logic before implementing a more efficient version.
 
@@ -161,7 +161,7 @@ def traditionalMarriage(men, women):
 {% endhighlight %}
 When we run the algorithm with 5 pairs (`traditionalMarriage(*initializePeople(5))`), it looks something like this:
 ![image1](/assets/traditionalMarriage/image1.png)
-Of course, it would be nicer if we had a visualization of the algorithm in action.
+Of course, it would be nice if we had a visualization of the algorithm in action.
 ### Visualizing the algorithm ###
 We can use `matplotlib` to make animations showing how the algorithm works. Firstly, we need to update our classes for men and women to contain modifiable row and column positions, so that they can be represented and manipulated in 2D space.
 {% highlight python %}
@@ -289,15 +289,78 @@ The example to the right pairs up 20 men with 20 women; we can see that for this
 
 ![gif2](\assets\traditionalmarriage\gif2.gif){: style="float: right"}
 
-Here's what happens when you have 5 men, all with the same preferences in women. We see that it takes 5 nights, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to. Something I'd like to implement next is a unique colour for each man and woman - that way we can see how each individual changes their preferences as the nights go on. Just because a woman picks a man for most of the nights, doesn't mean she'll end up marrying him!
+Next, here's what happens when you have 5 men, all with the same preferences in women. We see that it takes 5 nights, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to.
 
-Finally, just for fun, here's the algorithm in action on 50 pairs of men and women.
-![gif3](\assets\traditionalmarriage\gif3.gif)
+This next one is interesting - I've changed the code so that each man and woman has a different colour, so we can see more clearly which man visits which woman, and track how each individual changes their choice of partner as the nights go on.
 
-### The coloured version ###
+![gif4](\assets\traditionalmarriage\gif4.gif){: style="float: left"}
 
-### Checking for stability ###
+Notice how for the first four nights, the leftmost woman (yellow) is only visited by the teal man. However, by night 5, only the green man is visiting her, and by the final night, she ends up marrying the dark blue man!
 
-###
+It's evident what happens from the animation - after being rejected by the orange woman on night 3, the green man visits the yellow woman together with the teal man on night 4, and since he's higher on her list of preferences, the yellow woman now rejects the teal man. The algorithm accounts for these changes in preferences by only terminating when all women have found a single match.
+
+Finally, just for fun, here's the algorithm at work on 50 pairs of men and women.
+{:refdef: style="text-align: center;"}
+![gif3](\assets\traditionalmarriage\gif3.gif){: style="float: centre"}
+{: refdef}
+
+### Checking for Stability ###
+Now that we have our algorithm in action, we need to check that it gives us _stable_ pairs.
+
+First of all, we can update our `Person` class so that they can be assigned a partner.
+{% highlight python %}
+class Person:
+    def __init__(self, identity, n):
+        self.identity = identity
+        self.n = n
+        self.preferences = createPreferences(identity, n)
+        self.partner_identity = None  # Initialize with no partner ID
+
+    def setPartnerIdentity(self, input):
+        self.partner_identity = input
+
+    def getPartnerIdentity(self):
+        return self.partner_identity
+{% endhighlight %}
+Next, when the traditional marriage algorithm terminates, we need to assign each woman and man their partners:
+{% highlight python %}
+def traditionalMarriage(men, women):
+    nights = 0
+    while True:
+        if all(len(woman.getManList()) == 1 for woman in women):
+            print("Matching took " + str(nights) + " nights!")
+            # Assign partners
+            for woman in women:
+                woman.setPartnerIdentity(woman.getManList()[0])
+            for man in men:
+                man.setPartnerIdentity(man.getRemainingPreferences()[0])
+            break
+        # ...
+{% endhighlight %}
+The function below takes in arrays of men and women, and returns `True` if there are no cheating pairs.
+{% highlight python %}
+def checkStability(men, women):
+    for man in men:
+        for woman in women:
+            if man.getPreferences().index(man.getPartnerIdentity()) >      \
+               man.getPreferences().index(woman.getIdentity()) and         \
+               woman.getPreferences().index(woman.getPartnerIdentity()) >  \
+               woman.getPreferences().index(man.getIdentity()):
+                  return False
+    return True
+{% endhighlight %}
+Running the code below:
+{% highlight python %}
+bool_list = []
+for i in range(1000):
+    men, women = initializePeople(100)
+    traditionalMarriage(men, women)
+    bool_list.append(checkStability(men, women))
+
+sum(bool_list) # Remember that when performing arithmetic on boolean values, True is 1 and False is 0
+{% endhighlight %}
+We get an output of `1000`. Thus, the algorithm gave stable arrangements 1000/1000 times when we had 100 pairs of men and women; how do we prove it **always** gives a stable arrangement?
+### Proving Stability ###
+This next part gets slightly involved!
 
 ### What if people lie about their preferences? ###
