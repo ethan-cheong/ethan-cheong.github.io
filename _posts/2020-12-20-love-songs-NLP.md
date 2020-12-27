@@ -634,7 +634,8 @@ The problem is made somewhat easier if we use trees as the basis function. A tre
 
 Here's what all these greek letters mean:
 * $$R_1, R_2 \ldots R_J$$ representing the $$J$$ spaces that the tree partitions each combination of predictor values into. 
-* $$\gamma$$ is the output of the tree. If an observation $$x$$ belongs to a region $$R_j$$, then its predicted value $$f(x)$$ is given as $$\gamma_j$$.
+* $$\gamma_j$$ is the output of the tree for a particular node $$j$$.
+* The function $$I()$$ returns 1 if the statement within is true, and 0 otherwise. Thus, if an observation $$x$$ belongs to a region $$R_j$$, then its predicted value $$f(x)$$ is given as $$\gamma_j$$.
 * $$\Theta$$ are the parameters of the tree: it represents $$\{R_j,\gamma_j\}_1^J$$, which are the regions $$R$$ and outputs $$\gamma$$ of _each_ of the $$J$$ terminal nodes.
 
 Substituting this into the FSAM algorithm above, we get the following optimization step for fitting a boosted tree:
@@ -654,7 +655,17 @@ We update loss function in the _opposite direction_ of gradient. It's very easy 
 
 <center> $$\Theta_m = min_\Theta\sum^N_{i=1}(-g_{im}-T(x_i;\Theta))^2 $$ </center>
 
-which is computationally simple. 
+which is computationally much more simple. 
+
+#### Regularization of Boosted Trees ####
+When training machine learning algorithms, people often forget about the _regularization term_. This is a measure of the _complexity_ of the model. When training the model, it is penalized for being overly complex, which aims to prevent our model from overfitting the training data. 
+
+We can do this by minimizing an _objective function_ in place of our loss function. The objective function takes the form: 
+
+<center> $$ obj(\theta) = L(\theta) + \Omega(\theta) $$ </center>
+
+where $$\theta$$ are parameters to be optimized, and $$\Omega(\theta)$$ is a regularization term. We have to minimize the objective function by minimizing both the loss term (representing how badly the model fits the data) and the regularization term (representing how complex the model is). In theory, by minimizing the objective function, we then produce a model that both fits well and is not needlessly complicated.
+
 #### XGBoost ####
 XGBoost is an alternative solution to the tree boosting optimization problem above. Recall we had to solve the following:
 
