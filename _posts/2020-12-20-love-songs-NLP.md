@@ -618,15 +618,49 @@ $$ f(x) = \sum_{m=1}^M\beta_mb(x;\gamma_m)$$
 The algorithm we use is called _Forward Stagewise Additive Modelling_, and works as follows:
 1. Set $$f_0(x)=0$$
 2. For $$m=1,2\ldots M$$:
- - Compute the coefficients $$(\beta_m,\gamma_m)$$ that minimize the total loss for all training observations
+	*  Compute the coefficients $$(\beta_m,\gamma_m)$$ that minimize <center> $$\sum^N_{i=1}L(y_i,f_{m-1}(x_i) + \beta b(x_i;\gamma))$$ </center>
+		* I.e. find the coefficients that minimize the loss of our existing function plus an additional basis function with a coefficient $$\beta$$, across all of our $$N$$ training observations.
+	*  Set <center> $$f_m(x) = f_{m-1}(x) + \beta_mb(x;\gamma_m)$$ </center>
+		* I.e. _update_ our function by adding it to the weighted basis function using the coefficients we've just found above.
 
+Instead of the computationally expensive task of calculating all the $$\beta_m$$ and $$\gamma_m$$ at once, the algorithm calculates each $$\beta$$ incrementally, combines it with a basis function and adds it to our existing function - it then uses the loss of this composite function to calculate the subsequent $$\beta$$ values.  
 
 #### Gradient Tree Boosting ####
+The problem with the algorithm above lies in step 2: although we've reduced the number of terms we have to find in our optimization problem, it's still extremely difficult unless we have a very simple loss function. 
 
-#### Regularizing Boosted Trees ####
+The problem is made somewhat easier if we use trees as the basis function. A tree with $$J$$ _terminal nodes_ can be expressed formally as: 
 
+<center>$$T(x;\Theta) = \sum^J_{j=1}\gamma_jI(x\in R_j)$$</center>
+
+Here's what all these greek letters mean:
+* $$R_1, R_2 \ldots R_J$$ representing the $$J$$ spaces that the tree partitions each combination of predictor values into. 
+* $$\gamma$$ is the output of the tree. If an observation $$x$$ belongs to a region $$R_j$$, then its predicted value $$f(x)$$ is given as $$\gamma_j$$.
+* $$\Theta$$ are the parameters of the tree: it represents $$\{R_j,\gamma_j\}_1^J$$, which are the regions $$R$$ and outputs $$\gamma$$ of _each_ of the $$J$$ terminal nodes.
+
+Substituting this into the FSAM algorithm above, we get the following optimization step for fitting a boosted tree:
+<center> $$\Theta_m = min_\Theta\sum^N_{i=1}L(y_i, f_{m-1}(x_i)+T(x_i;\Theta))$$ </center>
+
+This is still a pretty difficult optimization problem, but we can solve it by thinking about _gradient descent_. For those unfamiliar with gradient descent, I'd reccommend taking a look at Andrew Ng's Coursera on Machine Learning. The algorithm goes something like this:
+
+ Say we are stuck on a mountain range, and want to get back to civilisation at the bottom of the mountains - but there's a heavy fog, so we can't see anything around us. We can use our feet to feel around us for the _steepness_ of the slope, finding which direction points upwards, and then proceed $$n$$ steps in the _opposite_ direction. After taking these steps, we feel around for the steepness again, and then repeat the process iteratively until we reach the base of the mountain.
+
+Gradient descent lets us minimize a loss function in the same way. We initialize random parameters, then calculate the gradient ('steepness') of the function at that point by differentiation. We then adjust the parameters in the opposite direction of the steepest gradient, and do this iteratively until we reach a minimum loss. This is particularly useful when we have to optimize many parameters, but have a _differentiable_ function to optimize.
+
+Gradient boosting works analagously,  but instead of optimizing in _parameter space_, we are optimizing in _function space_ - we want to find the optimal tree to add to our output function such that total loss is reduced. We have a _gradient vector_ $$g_m$$, whose components are:
+
+<center> $$ g_{im} = [ \frac{\partial L(y_i, f(x_i))}{\partial f(x_i)} ]_{f(x_i)=f_{m-1}(x_i)} $$</center>
+
+We update loss function in the _opposite direction_ of gradient. It's very easy to calculate gradient compared to our optimization problem earlier - so we can now simply fit a tree to our negative gradient instead by minimizing its squared error. Our optimization problem then reduces to:
+
+<center> $$\Theta_m = min_\Theta\sum^N_{i=1}(-g_{im}-T(x_i;\Theta))^2 $$ </center>
+
+which is computationally simple. 
 #### XGBoost ####
+XGBoost is an alternative solution to the tree boosting optimization problem above. Recall we had to solve the following:
 
+ <center> $$\Theta_m = min_\Theta\sum^N_{i=1}L(y_i, f_{m-1}(x_i)+T(x_i;\Theta))$$ </center>
+
+and used gradient boosting, which is a natural extension of gradient descent to functions instead of parameters.
 #### Regularizing XGBoost ####
 
 #### XGBoost Parameter Optimization ####
