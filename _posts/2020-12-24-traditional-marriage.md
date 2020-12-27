@@ -160,7 +160,7 @@ def traditionalMarriage(men, women):
             print(str(nights) + " nights have passed!")
 {% endhighlight %}
 When we run the algorithm with 5 pairs (`traditionalMarriage(*initializePeople(5))`), it looks something like this:
-![image1](\assets\traditionalMarriage\image1.png)
+![image1](\assets\traditionalmarriage\image1.png)
 Of course, it would be nice if we had a visualization of the algorithm in action.
 ### Visualizing the Algorithm ###
 We can use `matplotlib` to make animations showing how the algorithm works. Firstly, we need to update our classes for men and women to contain modifiable row and column positions, so that they can be represented and manipulated in 2D space.
@@ -224,7 +224,7 @@ world = updateWorld(men_array)
 print(world)
 {% endhighlight %}
 {:refdef: style="text-align: center;"}
-![image2](\assets\traditionalMarriage\image2.png)
+![image2](\assets\traditionalmarriage\image2.png)
 {: refdef}
 We see that we get a nice array which we can turn into a visualization. `matplotlib` has a convenient function `imshow` which outputs a grid of colours corresponding to each entry in an array. The colour mapped depends on the numerical value in each array entry; here's what it looks like when we apply it to our world:
 {% highlight python %}
@@ -233,7 +233,7 @@ import matplotlib.pyplot as plt
 plt.imshow(world, cmap="inferno", vmin=0, vmax=1)
 {% endhighlight %}
 {:refdef: style="text-align: center;"}
-![image3](\assets\traditionalMarriage\image3.png)
+![image3](\assets\traditionalmarriage\image3.png)
 {: refdef}
 This is a good starting point! Each orange square represents a man and each purple square a woman. Next, we need a way to make the men moving towards the women they're courting; `moveMen` does that by checking the position of each man with respect to their desired partner, and then moving them by one square.
 {% highlight python %}
