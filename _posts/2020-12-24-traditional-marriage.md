@@ -30,8 +30,6 @@ Our plan of attack is as follows:
 2. Implement the traditional marriage algorithm
 3. Visualization of the algorithm
 4. Check that arrangements are stable
-5. Prove that the arrangements given by the algorithm are always stable.
-6. Try out other situations - e.g. if men or women lie about their preferences.
 
 First, let's make representations for a person. We'll give each person an `identity` from 0 to n-1, following python's counting convention (with n being the number of pairs). We represent each person's preferences as a list and randomize them, then convert these to a deque. Compared to lists, deques have better performance for popping entries from the front and back.
 {% highlight python %}
@@ -359,10 +357,6 @@ for i in range(1000):
 
 sum(bool_list) # Remember that when performing arithmetic on boolean values, True is 1 and False is 0
 {% endhighlight %}
-We get an output of `1000`. Thus, the algorithm gave stable arrangements 1000/1000 times when we had 100 pairs of men and women; how do we prove it **always** gives a stable arrangement?
-### Proving Stability ###
-This next bit gets quite involved, but I feel it's a nice introduction to what a formal mathematical proof looks like.
+We get an output of `1000`. Thus, the algorithm gave stable arrangements 1000/1000 times when we had 100 pairs of men and women.
 
-How can we prove this algorithm is always stable? As hinted in the start, we can use mathematical induction.
-
-### What if people lie about their preferences? ###
+I hope this post gave you a nice little taster to how we can use python to model real-life situations using object-oriented programming - it's certainly given me some ideas for future projects.
