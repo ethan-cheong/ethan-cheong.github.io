@@ -672,8 +672,6 @@ XGBoost is an alternative solution to the tree boosting optimization problem abo
  <center> $$\Theta_m = min_\Theta\sum^N_{i=1}L(y_i, f_{m-1}(x_i)+T(x_i;\Theta))$$ </center>
 
 and used gradient boosting, which is a natural extension of gradient descent to functions instead of parameters.
-#### Regularizing XGBoost ####
-
 #### XGBoost Parameter Optimization ####
 
 ### Random Forests ###
