@@ -11,7 +11,7 @@ plugins: [jekyll-paginate]
 title:            Ethan Cheong
 tagline:
 description:
-url:              http://ethan-cheong.github.io
+url:              http://ethan-cheong.github.io/
 baseurl:          http://ethan-cheong.github.io/
 
 author:
