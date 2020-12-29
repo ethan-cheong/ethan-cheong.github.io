@@ -10,3 +10,4 @@ Upcoming posts:
 Site updates:
 1. Notes page (For MOOCs, courses, notes, books)
 2. Projects page gui
+3. Fix issue with image centering on traditionalmarriage
