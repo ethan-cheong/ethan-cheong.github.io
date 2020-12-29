@@ -479,7 +479,7 @@ Using `view(tfidf.df)`, we can see that we have a `data.frame` with 4453 documen
 
 Notice how _sparse_ this dataframe is - many of the entries are 0, which correspond to songs that don't contain the word encoded by that particular column.
 
-We can also get a similar dataframe `tf.idf` that uses term frequency instead of TF-IDF by setting the `weighting` parameter of `DocumentTermMatrix()` to `weightTf`.
+We can also get a similar dataframe `tf.df` that uses term frequency instead of TF-IDF by setting the `weighting` parameter of `DocumentTermMatrix()` to `weightTf`.
 
 ![image3](/assets/lovesongs/image3.png)
 
