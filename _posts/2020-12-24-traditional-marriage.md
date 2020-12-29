@@ -7,9 +7,9 @@ tag: Mathematics, Economics, Python
 mathjax: true
 permalink: /traditional-marriage/
 ---
-_If you'd like to try the code out for yourself, the scripts can be found [here](https://github.com/ethan-cheong/randomWalks/tree/main/traditionalMarriage)_
+Whilst (tragically) revisiting assignments for my introductory analysis course over winter break, I chanced upon this problem involving the traditional marriage algorithm. I had glanced over this question during the term-time, but recently I've become interested in object-oriented programming, and thought it would be worth taking a second look.
 
-Whilst (tragically) revisiting assignments for my introductory analysis course over winter break, I chanced upon this problem involving the traditional marriage algorithm. I had glanced over this question during the term-time, but recently I've become interested in object-oriented programming, and thought it would be worth taking a second look. If you'd like to give it a try, the full problem set can be found [here](\assets\traditionalmarriage\03ex.pdf) (all credits to Professor Peter Allen).
+The code for this post can be found [here](https://github.com/ethan-cheong/randomWalks/tree/main/traditionalMarriage), and if you'd like to give it a try, the full problem set can be found [here](\assets\traditionalmarriage\03ex.pdf) (all credits to Professor Peter Allen).
 
 The problem is as follows: we have _n_ men and _n_ women, and need to pair them off. Each man wants to marry a woman, and vice versa. Furthermore, each man and woman have a personal ranking of the member of the other sex they'd like to marry. This problem can represent a variety of real-world situations - one notable example is assigning graduating medical students to their first hospital appointments.
 
@@ -158,7 +158,9 @@ def traditionalMarriage(men, women):
             print(str(nights) + " nights have passed!")
 {% endhighlight %}
 When we run the algorithm with 5 pairs (`traditionalMarriage(*initializePeople(5))`), it looks something like this:
-![image1](\assets\traditionalmarriage\image1.png)
+{:refdef: style="text-align: center;"}
+![image1](/assets/traditionalmarriage/image1.png){: style="float: center"}
+{: refdef}
 Of course, it would be nice if we had a visualization of the algorithm in action.
 ### Visualizing the Algorithm ###
 We can use `matplotlib` to make animations showing how the algorithm works. Firstly, we need to update our classes for men and women to contain modifiable row and column positions, so that they can be represented and manipulated in 2D space.
@@ -221,18 +223,20 @@ men_array, women_array = initializePeople(5)
 world = updateWorld(men_array)
 print(world)
 {% endhighlight %}
-{:refdef: style="text-align: center;"}
-![image2](\assets\traditionalmarriage\image2.png)
-{: refdef}
+
+
+![image2](/assets/traditionalmarriage/image2.png)
+
+
 We see that we get a nice array which we can turn into a visualization. `matplotlib` has a convenient function `imshow` which outputs a grid of colours corresponding to each entry in an array. The colour mapped depends on the numerical value in each array entry; here's what it looks like when we apply it to our world:
 {% highlight python %}
 import matplotlib.pyplot as plt
 
 plt.imshow(world, cmap="inferno", vmin=0, vmax=1)
 {% endhighlight %}
-{:refdef: style="text-align: center;"}
-![image3](\assets\traditionalmarriage\image3.png)
-{: refdef}
+
+![image3](/assets/traditionalmarriage/image3.png)
+
 This is a good starting point! Each orange square represents a man and each purple square a woman. Next, we need a way to make the men moving towards the women they're courting; `moveMen` does that by checking the position of each man with respect to their desired partner, and then moving them by one square.
 {% highlight python %}
 def moveMen(world, men_array, women_array):
@@ -279,19 +283,19 @@ def updateWorld(men_array):
             world[current_row_position, current_col_position] += 0.1
     return world
 {% endhighlight %}
-![gif1](\assets\traditionalmarriage\gif1.gif){: style="float: right"}
+![gif1](/assets/traditionalmarriage/gif1.gif){: style="float: right"}
 
 The functions above allow us to move men one step at a time and plot out each step. We can then combine these with our main algorithm functions to get our full animation (the code can be found in `animations.py` on my github if you'd like to play around with it).
 
 The example to the right pairs up 20 men with 20 women; we can see that for this particular combination of men and women, the algorithm took 15 iterations to get our pairs. Remember that the number of iterations changes depending on the (unseen) personal preferences of each man and woman!
 
-![gif2](\assets\traditionalmarriage\gif2.gif){: style="float: right"}
+![gif2](/assets/traditionalmarriage/gif2.gif){: style="float: right"}
 
 Next, here's what happens when you have 5 men, all with the same preferences in women. We see that it takes 5 nights, and you can see each of the remaining men (besides the one that was selected by the woman) choosing the next woman on their list to propose to.
 
 This next one is interesting - I've changed the code so that each man and woman has a different colour, so we can see more clearly which man visits which woman, and track how each individual changes their choice of partner as the nights go on.
 
-![gif4](\assets\traditionalmarriage\gif4.gif){: style="float: left"}
+![gif4](/assets/traditionalmarriage/gif4.gif){: style="float: left"}
 
 Notice how for the first four nights, the leftmost woman (yellow) is only visited by the teal man. However, by night 5, only the green man is visiting her, and by the final night, she ends up marrying the dark blue man!
 
@@ -299,7 +303,7 @@ It's evident what happens from the animation - after being rejected by the orang
 
 Finally, just for fun, here's the algorithm at work on 50 pairs of men and women.
 {:refdef: style="text-align: center;"}
-![gif3](\assets\traditionalmarriage\gif3.gif){: style="float: centre"}
+![gif3](/assets/traditionalmarriage/gif3.gif){: style="float: centre"}
 {: refdef}
 
 ### Checking for Stability ###

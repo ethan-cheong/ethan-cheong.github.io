@@ -3,11 +3,12 @@ layout: post
 title: Love Song Classification with R (Part 1)
 date: 2020-12-18
 categories: blog
-tag: Projects, R, ML, NLP
-mathjax: true
+tag: R, ML, NLP
+usemathjax: true
 permalink: /love-song-classification-1/
 ---
-_You can find the datasets and code for this project here: [github.com/ethan-cheong/loveSongs](http://github.com/ethan-cheong/loveSongs)_
+_In this post, I explore methods for natural language processing and machine learning, and using them to classify songs.
+ You can find the datasets and code for this project [here](http://github.com/ethan-cheong/loveSongs)._
 
 _This is a long post! I go over each step of the project, as well as the theory behind the algorithms that I've applied._
 
@@ -626,14 +627,14 @@ The algorithm we use is called _Forward Stagewise Additive Modelling_, and works
 Instead of the computationally expensive task of calculating all the $$\beta_m$$ and $$\gamma_m$$ at once, the algorithm calculates each $$\beta$$ incrementally, combines it with a basis function and adds it to our existing function - it then uses the loss of this composite function to calculate the subsequent $$\beta$$ values.  
 
 #### Gradient Tree Boosting ####
-The problem with the algorithm above lies in step 2: although we've reduced the number of terms we have to find in our optimization problem, it's still extremely difficult unless we have a very simple loss function. 
+The problem with the algorithm above lies in step 2: although we've reduced the number of terms we have to find in our optimization problem, it's still extremely difficult unless we have a very simple loss function.
 
-The problem is made somewhat easier if we use trees as the basis function. A tree with $$J$$ _terminal nodes_ can be expressed formally as: 
+The problem is made somewhat easier if we use trees as the basis function. A tree with $$J$$ _terminal nodes_ can be expressed formally as:
 
 <center>$$T(x;\Theta) = \sum^J_{j=1}\gamma_jI(x\in R_j)$$</center>
 
 Here's what all these greek letters mean:
-* $$R_1, R_2 \ldots R_J$$ representing the $$J$$ spaces that the tree partitions each combination of predictor values into. 
+* $$R_1, R_2 \ldots R_J$$ representing the $$J$$ spaces that the tree partitions each combination of predictor values into.
 * $$\gamma_j$$ is the output of the tree for a particular node $$j$$.
 * The function $$I()$$ returns 1 if the statement within is true, and 0 otherwise. Thus, if an observation $$x$$ belongs to a region $$R_j$$, then its predicted value $$f(x)$$ is given as $$\gamma_j$$.
 * $$\Theta$$ are the parameters of the tree: it represents $$\{R_j,\gamma_j\}_1^J$$, which are the regions $$R$$ and outputs $$\gamma$$ of _each_ of the $$J$$ terminal nodes.
@@ -655,12 +656,12 @@ We update loss function in the _opposite direction_ of gradient. It's very easy 
 
 <center> $$\Theta_m = min_\Theta\sum^N_{i=1}(-g_{im}-T(x_i;\Theta))^2 $$ </center>
 
-which is computationally much more simple. 
+which is computationally much more simple.
 
 #### Regularization of Boosted Trees ####
-When training machine learning algorithms, people often forget about the _regularization term_. This is a measure of the _complexity_ of the model. When training the model, it is penalized for being overly complex, which aims to prevent our model from overfitting the training data. 
+When training machine learning algorithms, people often forget about the _regularization term_. This is a measure of the _complexity_ of the model. When training the model, it is penalized for being overly complex, which aims to prevent our model from overfitting the training data.
 
-We can do this by minimizing an _objective function_ in place of our loss function. The objective function takes the form: 
+We can do this by minimizing an _objective function_ in place of our loss function. The objective function takes the form:
 
 <center> $$ obj(\theta) = L(\theta) + \Omega(\theta) $$ </center>
 
