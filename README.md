@@ -2,8 +2,7 @@ Code for my website.
 
 Posts:
 1. Taking fast math notes with vim
-2. Plotly visualizations with github pages
-3. Macroeconomic/microeconomic modelling
+2. Macroeconomic/microeconomic modelling
 
 
 To fix:
