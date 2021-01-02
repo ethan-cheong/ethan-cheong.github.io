@@ -13,3 +13,4 @@ To fix:
 5. Reduce whitespace on right side (center text)
 6. GUI for Projects page
 7. Notes page for mooc, courses, books etc.
+8. Change website color
