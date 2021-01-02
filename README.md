@@ -7,7 +7,7 @@ Posts:
 
 
 To fix:
-1. Get rid of the description
+1. Get rid of the description, tab icon, dot
 2. Fonts not loading on github pages
 3. Center images for blog Posts
 4. Reduce whitespace on right side (center text)
