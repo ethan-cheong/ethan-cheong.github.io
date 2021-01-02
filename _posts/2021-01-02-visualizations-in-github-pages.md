@@ -19,7 +19,7 @@ I meant for this post to be a kind of proof of concept/precursor to a future pos
 </div>
 \\
 For my more financially-oriented friends, we can make some interactive candlestick charts with the help of the `quantmod` package.
-\\
+
 
 <div class="figure">
 <!--html_preserve--><div id="htmlwidget-ab698f2ad3487f320be8" style="width:720px;height:504px;" class="plotly html-widget"></div>
@@ -47,7 +47,7 @@ htmlwidgets: true
 ---
 ```
 
-At the moment, this doesn't do anything. We'll have to insert code to tell our site to include our dependencies. Under `_includes/head.html`, add the following code (Credits for this bit goes to Gervasio, who wrote more on this [here](https://g3rv4.com/2017/08/htmlwidgets-jekyll-rstats):
+At the moment, this doesn't do anything. We'll have to insert code to tell our site to include our dependencies. Under `_includes/head.html`, add the following code (Credits for this bit goes to Gervasio, who wrote more on this [here](https://g3rv4.com/2017/08/htmlwidgets-jekyll-rstats)):
 {% highlight html %}
 {% raw %}
 {% if page.htmlwidgets %}
@@ -63,12 +63,16 @@ Finally, when we have visualizations we want to display in our post, include the
 {% highlight r %}
 {% raw %}
 ```{r}
-library(ggplot2)
-ggplot(data = diamonds) +
-geom_bar(aes(x=cut,fill=cut))
+library(plotly)
+plot_ly(
+  data = mpg,
+  x = ~cty,
+  y = ~hwy
+)
 ```
 {% endraw %}
 {% endhighlight %}
+
 We can then run `mdConverter.R`, which makes a post with the following chart:
 
 
