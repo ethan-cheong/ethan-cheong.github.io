@@ -28,18 +28,18 @@
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
   <!-- for mathjax support -->
-    {% if page.usemathjax %}
-      <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-        TeX: { equationNumbers: { autoNumber: "AMS" } }
-        });
-      </script>
-      <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    {% endif %}
+  {% if page.usemathjax %}
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+      TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  {% endif %}
 
   <!-- for htmlwidgets -->
-    {% if page.htmlwidgets %}
-      {% assign dep_file = page.url | split: '/' | last | prepend : 'htmlwidgets/' | append : '.html' | replace: '.Rmd', '' %}
-      {% include {{dep_file}} %}
-    {% endif %}
+  {% if page.htmlwidgets %}
+    {% assign dep_file = page.url | split: '/' | last | prepend : 'htmlwidgets/' | append : '.html' | replace: '.Rmd', '' %}
+    {% include {{dep_file}} %}
+  {% endif %}
 </head>
