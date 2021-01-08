@@ -3,6 +3,7 @@ Code for my website.
 Posts:
 1. Taking fast math notes with vim
 2. Macroeconomic/microeconomic modelling
+3. Interactively visualizing UK Crime rates with Dash
 
 
 To fix:
