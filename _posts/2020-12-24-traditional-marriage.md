@@ -7,7 +7,7 @@ tag: Mathematics, Economics, Python
 mathjax: true
 permalink: /traditional-marriage/
 ---
-Whilst (tragically) revisiting assignments for my introductory analysis course over winter break, I chanced upon this problem involving the traditional marriage algorithm. I had glanced over this question during the term-time, but recently I've become interested in object-oriented programming, and thought it would be worth taking a second look.
+Whilst revisiting assignments for my introductory analysis course over winter break, I chanced upon this problem involving the traditional marriage algorithm. I had glanced over this question during the term-time, but recently I've become interested in object-oriented programming, and thought it would be worth taking a second look.
 
 The code for this post can be found [here](https://github.com/ethan-cheong/randomWalks/tree/main/traditionalMarriage), and if you'd like to give it a try, the full problem set can be found [here](\assets\traditionalmarriage\03ex.pdf) (all credits to Professor Peter Allen).
 
