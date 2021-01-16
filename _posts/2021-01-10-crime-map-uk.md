@@ -6,7 +6,7 @@ categories: blog
 tag: Python
 permalink: /crime-map-uk/
 ---
-I spent a good part of the first two weeks of 2021 building a dashboard that plots crime rates in the UK. It runs on Dash, a framework for making web apps in Python (built on flask), and is running on an Amazon Web Services EC2 instance.
+I spent a good part of the first two weeks of 2021 building a dashboard that plots crime rates in the UK. It uses Dash, a framework for making web apps in Python (based on Flask), and is running on an Amazon Web Services EC2 instance.
 You can try it out here: [http://13.212.193.155:8050/](http://13.212.193.155:8050/) (I haven't gotten around to registering a domain name for this, and will probably do so if I ever decide to register a domain for the blog.)
 
 Originally, I had plans to do a "racism-detector" type app that would scrape twitter for racist tweets (maybe using some kind of model to identify if a tweet was racist) and then plot density of racist tweets across the UK. I unfortunately ran into issues with geo-tagging each tweet and had to scrap that, although that eventually became the motivation for this project. I was also partly inspired by [this](https://shiny.rstudio.com/gallery/crime-watch.html) example app in the documentation for Shiny - I thought it was interesting in concept (I think we have a strange obsession with crime, especially when we can actually see it happening near us) and worth expanding on.
@@ -57,3 +57,5 @@ I split up building the app into these steps, which took me about a week:
 * Deploy on an AWS EC2 instance (a virtual computer)
 
 Admittedly the [code](https://github.com/ethan-cheong/CrimeMapUK) could use a lot of work - there's a lot of refactoring to be done, and there are definitely ways to reduce RAM usage on our virtual computer (we start by loading a 2 gigabyte dataset!) - but I was more interested in making a working prototype than optimizing its performance. One possibility I considered was putting the dataset into a database, and having the app do SQL calls so that data is only loaded into memory right before it's used to plot something.
+
+I've also been thinking on future expansions for this project (besides improving efficiency) - since the dataset I pulled from the UK Police API was very large (it had something like 1.8 million entries!), there's probably potential to train some kind of model on it and incorporate it in our app. I've also examples of some very cool web apps that contain their own model-training procedures - the user can select what data they want and a model is fit on the spot. 
