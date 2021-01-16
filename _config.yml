@@ -24,3 +24,6 @@ paginate:         5
 linkedin:         https://www.linkedin.com/in/ethan-cheong/
 github:
   repo:           https://github.com/ethan-cheong
+
+sass:
+  sass_dir: assets/css
