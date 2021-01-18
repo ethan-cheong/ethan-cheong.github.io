@@ -3,7 +3,7 @@ layout: post
 title: Love Song Classification with R (Part 1)
 date: 2020-12-18
 categories: blog
-tag: R, ML, NLP
+tag: Machine Learning, R
 usemathjax: true
 permalink: /love-song-classification-1/
 ---

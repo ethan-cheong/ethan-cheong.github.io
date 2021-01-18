@@ -3,7 +3,7 @@ layout: post
 title: Interactively Mapping Crime in the UK
 date: 2021-01-16
 categories: blog
-tag: Python
+tag: Economics, Python
 permalink: /crime-map-uk/
 ---
 I spent a good part of the first two weeks of 2021 building a dashboard that plots crime rates in the UK. It uses Dash, a framework for making web apps in Python (based on Flask), and is running on an Amazon Web Services EC2 instance.
@@ -58,4 +58,4 @@ I split up building the app into these steps, which took me about a week:
 
 Admittedly the [code](https://github.com/ethan-cheong/CrimeMapUK) could use a lot of work - there's a lot of refactoring to be done, and there are definitely ways to reduce RAM usage on our virtual computer (we start by loading a 2 gigabyte dataset!) - but I was more interested in making a working prototype than optimizing its performance. One possibility I considered was putting the dataset into a database, and having the app do SQL calls so that data is only loaded into memory right before it's used to plot something.
 
-I've also been thinking on future expansions for this project (besides improving efficiency) - since the dataset I pulled from the UK Police API was very large (it had something like 1.8 million entries!), there's probably potential to train some kind of model on it and incorporate it in our app. I've also examples of some very cool web apps that contain their own model-training procedures - the user can select what data they want and a model is fit on the spot. 
+I've also been thinking on future expansions for this project (besides improving efficiency) - since the dataset I pulled from the UK Police API was very large (it had something like 1.8 million entries!), there's probably potential to train some kind of model on it and incorporate it in our app. I've also examples of some very cool web apps that contain their own model-training procedures - the user can select what data they want and a model is fit on the spot.
