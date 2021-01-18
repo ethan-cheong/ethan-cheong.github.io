@@ -1,4 +1,4 @@
-Code for my website.
+Code for my blog. Forked from hyde (a jekyll theme)
 
 Posts:
 1. Taking fast math notes with vim
