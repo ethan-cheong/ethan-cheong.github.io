@@ -3,7 +3,7 @@ layout: post
 title: Machine Learning and Econometrics - a rewarding relationship?
 date: 2021-01-28
 categories: blog
-tag: ML, Economics
+tag: Machine Learning, Economics
 permalink: /ml-and-metrics/
 ---
 Disclaimer: these are my thoughts on the subject based on my 2+ years of learning machine learning and my experiences talking to seniors (who've actually studied econometrics). No doubt my views on this will change next year, and everything I say about econometrics now should probably be fact-checked rigorously before it ends up anywhere else.
