@@ -42,6 +42,6 @@ What does this all mean? Well, even in a data science context, _interpretability
 * Debugging a model (say if it fails miserably on a new prediction set) is much easier when you know how it works
 * You may need to justify how your model works to others (maybe a boss), and understanding how a model works doesn't mean you'll be able to explain it simply to someone without the expertise (they may just get bored).
 
-What this means is that beyond learning about linear models, there's a non-insignificant reason to learn about econometrics, even as an ML practitioner (thankfully validating my university course choice).
+What this means is that beyond learning about linear models, there's a non-insignificant reason to learn about econometrics, even as an ML practitioner (thankfully validating my choice of university course).
 
 What if you're an economist? Well I can't speak to the feasibility of using modern machine learning methods for economic modelling (although methods that marry interpretability and accuracy like Boosted Trees do exist). I'll have more thoughts on this once year 2 starts.
