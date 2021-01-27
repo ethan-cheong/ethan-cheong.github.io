@@ -1,9 +1,10 @@
 Code for my blog. Forked from hyde (a jekyll theme)
 
 Posts:
-1. Taking fast math notes with vim
-2. Economic modelling
-3. Something to do with chemistry? Mapping spectra to molecules paper (Which uses CNNs)
+1. Taking fast math notes with vim - remaking my templates
+2. Machine Learning and Economics - A tenuous but rewarding relationship?
+3. Digital Consulting - Time series modelling with GANs
+4. Plain ol consulting - Advising a firm on market entry into the UK
 
 
 To fix:
