@@ -34,10 +34,10 @@ Compare this to a linear regression that might try to answer the same problem:
 
 ![Linreg](/assets/mlmetrics/plot.png)
 
-This model doesn't fit the data superbly, but it helps us to better understand the relationship between the number of exclamation marks in a text message and whether the author was angry or not. Will this help us make predictions? Maybe - but it definitely won't be as accurate as BERT. Nonetheless, it sheds light on a linear relationship between factors, something that BERT just can't do (Whether there's any causation between them is something else entirely).
+This model doesn't fit the data superbly, but it helps us to better understand the relationship between the number of exclamation marks in a text message and whether the author was angry or not. Will this help us make predictions? Maybe - but it definitely won't be as accurate as BERT. Nonetheless, it sheds light on a linear relationship between factors, something that BERT just can't do (Whether there's any causative relationship between them is something else entirely).
 
 # So what?
-What does this all mean? Well, even in a data science context, _interpretability is important_. If a model performs well, why not just trust it and ignore why it made a decision, regardless of how complicated it made things? [This paper](https://arxiv.org/abs/1702.08608) goes into it in more depth, but to summarize:
+What does this all mean? Well, even in a machine learning context, _interpretability is important_. If a model performs well, why not just trust it and ignore why it made a decision, regardless of how complicated it made things? [This paper](https://arxiv.org/abs/1702.08608) goes into it in more depth, but to summarize:
 * A single metric (like Mean Squared Error / Classification Accuracy) is an incomplete description of real-world task. Learning why something happened might give you reasons why a model failed/succeeded, and let you improve it further
 * Debugging a model (say if it fails miserably on a new prediction set) is much easier when you know how it works
 * You may need to justify how your model works to others (maybe a boss), and understanding how a model works doesn't mean you'll be able to explain it simply to someone without the expertise (they may just get bored).
@@ -45,4 +45,4 @@ What does this all mean? Well, even in a data science context, _interpretability
 What this means is even as someone who enjoys machine learning, there's a non-insignificant reason to study econometrics to some degree - the two fields complement each other very nicely.
 (thankfully validating my choice of university course)
 
-What if you're an economist? Well I can't speak to the feasibility of using modern machine learning methods for economic modelling (although methods that marry interpretability and accuracy like Boosted Trees do exist). I'll have more thoughts on this once year 2 starts.
+What if you're an economist? I can't speak to the feasibility of using modern machine learning methods for economic modelling, although methods that marry interpretability and accuracy like Boosted Trees do exist. I'll have more thoughts on this once year 2 starts.
