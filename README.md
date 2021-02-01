@@ -5,6 +5,7 @@ Posts:
 2. Digital Consulting - Price prediction with deep learning
 3. Plain ol' consulting - Advising a big company on market entry into the UK
 4. ML and Metrics 2 - Predicting Causality
+5. Macro models for EC102
 
 
 To fix:
